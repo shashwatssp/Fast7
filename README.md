@@ -1,54 +1,112 @@
-# React + TypeScript + Vite
+Dash ⚡
+Launch Your Restaurant Online in Minutes!
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dash is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Dash makes it easy to establish an online presence.
 
-Currently, two official plugins are available:
+Table of Contents
+Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Technologies Used
 
-## Expanding the ESLint configuration
+Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Usage
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+Project Structure
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Contributing
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+License
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Features
+Mobile-First Design: Fully responsive and optimized for mobile devices.
+
+Quick Setup: Get your restaurant online in minutes.
+
+Google Login Integration: Easily continue with Google.
+
+Beautiful UI: Designed with Tailwind CSS for a modern look and feel.
+
+Lightning-Fast Development: Built with Vite for fast builds and hot module replacement.
+
+Technologies Used
+React: Frontend framework for building user interfaces.
+
+Vite: Lightning-fast build tool for modern web apps.
+
+TypeScript: Strongly typed JavaScript for better development experience.
+
+Tailwind CSS: Utility-first CSS framework for styling.
+
+Google OAuth: Authentication integration with Google.
+
+Installation
+Follow these steps to set up the project locally:
+
+Clone the repository:
+
+bash
+git clone https://github.com/shashwatssp/Dash.git
+cd Dash
+Install dependencies:
+
+bash
+npm install
+Start the development server:
+
+bash
+npm run dev
+Open the app in your browser:
+
+Local URL: http://localhost:5173
+
+Network URL (for mobile testing): Use the IP address displayed in the terminal.
+
+Usage
+Run the App
+After starting the development server (npm run dev), you can access the app on your browser or mobile device (if on the same network).
+
+Build for Production
+To create an optimized production build:
+
+bash
+npm run build
+The build files will be generated in the dist folder.
+
+Preview Production Build
+To preview the production build locally:
+
+bash
+npm run preview
+Project Structure
+plaintext
+Dash/
+├── public/               # Static assets (e.g., favicon, images)
+├── src/
+│   ├── components/       # React components (e.g., HomePage.tsx)
+│   ├── styles/           # Tailwind CSS configuration and custom styles
+│   ├── App.tsx           # Main app component
+│   ├── main.tsx          # Entry point for React app
+│   └── index.css         # Tailwind directives and global styles
+├── .gitignore            # Files to ignore in Git repository
+├── package.json          # Project dependencies and scripts
+├── tailwind.config.js    # Tailwind CSS configuration file
+└── vite.config.ts        # Vite configuration file
+Contributing
+Contributions are welcome! To contribute:
+
+Fork this repository.
+
+Create a new branch:
+
+bash
+git checkout -b feature/your-feature-name
+Make your changes and commit them:
+
+bash
+git commit -m "Add your message here"
+Push to your forked repository:
+
+bash
+git push origin feature/your-feature-name
+Open a pull request on GitHub.
