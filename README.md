@@ -69,18 +69,3 @@ The build files will be generated in the `dist` folder.
 
 ### Preview Production Build
 To preview the production build locally:
-
-## Project Structure
-
-Dash/
-├── public/ # Static assets (e.g., favicon, images)
-├── src/
-│ ├── components/ # React components (e.g., HomePage.tsx)
-│ ├── styles/ # Tailwind CSS configuration and custom styles
-│ ├── App.tsx # Main app component
-│ ├── main.tsx # Entry point for React app
-│ └── index.css # Tailwind directives and global styles
-├── .gitignore # Files to ignore in Git repository
-├── package.json # Project dependencies and scripts
-├── tailwind.config.js # Tailwind CSS configuration file
-└── vite.config.ts # Vite configuration file
