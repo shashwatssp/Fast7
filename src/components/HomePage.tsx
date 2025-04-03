@@ -1,6 +1,23 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../firebase'; // Ensure this path is correct
 import './HomePage.css';
 
 const HomePage = () => {
+    const navigate = useNavigate();
+
+    const handleGoogleSignIn = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            await signInWithPopup(auth, provider);
+            // After successful sign-in, navigate to the onboarding page
+            navigate('/onboarding');
+        } catch (error) {
+            console.error('Error signing in with Google:', error);
+        }
+    };
+
     return (
         <div className="animated-bg">
             <div className="wrapper">
@@ -23,7 +40,7 @@ const HomePage = () => {
                             </p>
                             <button
                                 className="primary-button"
-                                onClick={() => console.log('Google login clicked')}
+                                onClick={handleGoogleSignIn}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 48 48">
                                     <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
@@ -61,7 +78,7 @@ const HomePage = () => {
                         {/* Call to Action Section */}
                         <section className="cta-section">
                             <p className="cta-text">Ready to grow your restaurant business?</p>
-                            <button className="primary-button">
+                            <button className="primary-button" onClick={handleGoogleSignIn}>
                                 Get Started Now
                             </button>
                         </section>
