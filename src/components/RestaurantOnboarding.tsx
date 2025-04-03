@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './RestaurantOnboarding.css';
 import MenuSelectionStep from './MenuSelectionStep';
+import { db } from '../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface MenuSelections {
   standardCategories: (number | string)[];
@@ -69,11 +71,41 @@ const RestaurantOnboarding = () => {
         setStep(4);
     };
 
-    const handleCreateWebsite = () => {
-        // This would finalize the setup and redirect to the menu selection page
-        console.log("Creating website with:", { domainName, ...restaurantInfo, menuSelections });
-        // Redirect to menu selection would happen here
+    const handleCreateWebsite = async () => {
+        try {
+            const domainPrefix = domainName.split('.')[0];
+            
+            const restaurantData = {
+                domainName: domainName,
+                restaurantInfo: {
+                    name: restaurantInfo.name,
+                    bio: restaurantInfo.bio,
+                    phone: restaurantInfo.phone,
+                    email: restaurantInfo.email,
+                    address: restaurantInfo.address
+                },
+                menuSelections: {
+                    standardCategories: menuSelections.standardCategories,
+                    standardItems: menuSelections.standardItems,
+                    customCategories: menuSelections.customCategories,
+                    customItems: menuSelections.customItems
+                },
+                createdAt: new Date()
+            };
+            
+            await setDoc(doc(db, 'restaurants', domainPrefix), restaurantData);
+            
+            console.log("Website created successfully with data:", restaurantData);
+            alert("Your website has been created successfully!");
+            
+            // Optional: Redirect to the new website
+            // window.location.href = `https://${domainName}`;
+        } catch (error) {
+            console.error("Error creating website:", error);
+            alert("There was an error creating your website. Please try again.");
+        }
     };
+    
 
     return (
         <div className="onboarding-container">
@@ -93,7 +125,7 @@ const RestaurantOnboarding = () => {
             </div>
 
             <div className="onboarding-content">
-                {step === 3 && (
+                {step === 1 && (
                     <div className="onboarding-step domain-step">
                         <h2>Let's create your restaurant website</h2>
                         <p className="step-description">First, choose a unique domain name for your restaurant website.</p>
@@ -226,7 +258,7 @@ const RestaurantOnboarding = () => {
                     </div>
                 )}
 
-                {step === 1 && (
+                {step === 3 && (
                     <MenuSelectionStep 
                         onNext={handleMenuNext} 
                         onBack={() => setStep(2)} 

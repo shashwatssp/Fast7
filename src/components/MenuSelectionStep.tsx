@@ -1,6 +1,7 @@
-// MenuSelectionStep.jsx
 import React, { useState, useEffect } from 'react';
 import './MenuSelectionStep.css';
+import { db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const MenuSelectionStep = ({ onNext, onBack }) => {
     const [loading, setLoading] = useState(true);
@@ -17,70 +18,60 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState(null);
 
-    // Mock function to fetch categories and menu items
+    // Fetch categories and menu items from Firebase
     useEffect(() => {
-        // This would be a Firebase query in production
-        setTimeout(() => {
-            const mockCategories = [
-                { id: 101, name: "Main Course", icon: "🍲" },
-                { id: 102, name: "Appetizers", icon: "🥟" },
-                { id: 103, name: "Desserts", icon: "🍰" },
-                { id: 104, name: "Beverages", icon: "🥤" },
-                { id: 105, name: "Bread & Rice", icon: "🍚" }
-            ];
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch categories from Firebase
+                const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+                const fetchedCategories = categoriesSnapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    id: parseInt(doc.id)
+                }));
+                
+                // Fetch menu items from Firebase
+                const itemsSnapshot = await getDocs(collection(db, 'menuItems'));
+                const fetchedItems = itemsSnapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    id: parseInt(doc.id)
+                }));
+                
+                // Group items by categoryId
+                const groupedItems = {};
+                fetchedCategories.forEach(category => {
+                    const categoryItems = fetchedItems.filter(item => 
+                        item.categoryId === category.id
+                    );
+                    
+                    groupedItems[category.id] = categoryItems.reduce((acc, item) => {
+                        acc[item.id] = { 
+                            selected: false, 
+                            price: '', 
+                            name: item.name,
+                            description: item.description,
+                            image: item.image
             
-            const mockItems = {
-                101: [
-                    { id: 501, name: "Kadhai Paneer", description: "Cottage cheese cooked with bell peppers in a spicy masala" },
-                    { id: 502, name: "Shahi Paneer", description: "Cottage cheese in a rich and creamy tomato sauce" },
-                    { id: 503, name: "Butter Chicken", description: "Tender chicken in a rich buttery tomato sauce" },
-                    { id: 504, name: "Chicken Tikka Masala", description: "Grilled chicken chunks in a spiced curry sauce" },
-                    { id: 505, name: "Dal Makhani", description: "Black lentils simmered overnight with butter and cream" }
-                ],
-                102: [
-                    { id: 601, name: "Paneer Tikka", description: "Marinated cottage cheese chunks grilled in a tandoor" },
-                    { id: 602, name: "Spring Rolls", description: "Crispy rolls filled with vegetables" },
-                    { id: 603, name: "Samosas", description: "Triangular pastry filled with spiced potatoes and peas" },
-                    { id: 604, name: "Chicken 65", description: "Spicy deep-fried chicken bites" }
-                ],
-                103: [
-                    { id: 701, name: "Gulab Jamun", description: "Deep-fried milk solids soaked in sugar syrup" },
-                    { id: 702, name: "Rasmalai", description: "Soft cottage cheese dumplings in sweetened milk" },
-                    { id: 703, name: "Kheer", description: "Rice pudding with nuts and cardamom" }
-                ],
-                104: [
-                    { id: 801, name: "Mango Lassi", description: "Yogurt drink blended with mango and sugar" },
-                    { id: 802, name: "Masala Chai", description: "Spiced milk tea" },
-                    { id: 803, name: "Fresh Lime Soda", description: "Refreshing lime juice with soda water" }
-                ],
-                105: [
-                    { id: 901, name: "Butter Naan", description: "Soft leavened bread brushed with butter" },
-                    { id: 902, name: "Garlic Naan", description: "Naan topped with garlic and herbs" },
-                    { id: 903, name: "Jeera Rice", description: "Basmati rice cooked with cumin seeds" }
-                ]
-            };
-            
-            setCategories(mockCategories);
-            setActiveCategory(mockCategories[0].id);
-            
-            // Pre-populate the items for each category
-            const initialSelectedItems = {};
-            mockCategories.forEach(category => {
-                const categoryItems = mockItems[category.id] || [];
-                initialSelectedItems[category.id] = categoryItems.reduce((acc, item) => {
-                    acc[item.id] = { 
-                        selected: false, 
-                        price: '', 
-                        name: item.name,
-                        description: item.description
-                    };
-                    return acc;
-                }, {});
-            });
-            
-            setSelectedItems(initialSelectedItems);
-            setLoading(false);
-        }, 1500);
+                        };
+                        return acc;
+                    }, {});
+                });
+                
+                setCategories(fetchedCategories);
+                setSelectedItems(groupedItems);
+                
+                // Set the first category as active if categories exist
+                if (fetchedCategories.length > 0) {
+                    setActiveCategory(fetchedCategories[0].id);
+                }
+            } catch (error) {
+                console.error('Error fetching data from Firebase:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
     }, []);
 
     const handleItemSelection = (categoryId, itemId) => {
@@ -174,11 +165,14 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
     };
 
     const handleSubmit = () => {
-        // Prepare data for Firebase
         const menuSelections = {
             standardCategories: [],
             standardItems: {},
-            customCategories: customCategories.map(cat => cat.id),
+            customCategories: customCategories.map(cat => ({
+                id: cat.id,
+                name: cat.name,
+                icon: cat.icon
+            })),
             customItems: {}
         };
         
@@ -187,24 +181,37 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
             const categoryItems = selectedItems[category.id];
             const selectedCategoryItems = Object.entries(categoryItems)
                 .filter(([_, item]) => item.selected && item.price)
-                .map(([itemId, _]) => parseInt(itemId));
+                .map(([itemId, item]) => ({
+                    id: parseInt(itemId),
+                    name: item.name,
+                    description: item.description,
+                    price: parseFloat(item.price),
+                    image: item.image
+                }));
             
             if (selectedCategoryItems.length > 0) {
-                menuSelections.standardCategories.push(category.id);
+                menuSelections.standardCategories.push({
+                    id: category.id,
+                    name: category.name,
+                    icon: category.icon
+                });
                 menuSelections.standardItems[category.id] = selectedCategoryItems;
             }
         });
         
         // Process custom items
         Object.entries(customItems).forEach(([categoryId, items]) => {
-            menuSelections.customItems[categoryId] = Object.keys(items);
+            menuSelections.customItems[categoryId] = Object.entries(items).map(([itemId, item]) => ({
+                id: itemId,
+                name: item.name,
+                price: parseFloat(item.price)
+            }));
         });
         
         console.log("Final menu selections:", menuSelections);
-        
-        // This would save to Firebase and proceed
         onNext(menuSelections);
     };
+    
 
     const filteredItems = (categoryId) => {
         const items = selectedItems[categoryId] || {};
