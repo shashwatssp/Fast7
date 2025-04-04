@@ -37,25 +37,25 @@ function App() {
 
 
 
-  // const subdomain = "shas";
-  // console.log("Detected subdomain:", subdomain);
+  const subdomain = "foods";
+  console.log("Detected subdomain:", subdomain);
 
   return (
     <Router>
       <Routes>
-        {/* {subdomain ? (
+        {subdomain ? (
           <Route 
-            path="shas" 
+            path="foods" 
             element={<RestaurantPage subdomain={subdomain} />} 
           />
-        ) : ( */}
+        ) : (
           <>
             <Route path="/" element={user ? <Navigate to="/onboarding" /> : <HomePage />} />
             <Route path="/onboarding" element={user ? <RestaurantOnboarding /> : <Navigate to="/" />} />
             <Route path="/home" element={user ? <HomePage /> : <Navigate to="/" />} />
             <Route path="/:domainPrefix/*" element={<RestaurantPage />} />
           </>
-        {/* )} */}
+        )}
       </Routes>
     </Router>
   );
