@@ -56,20 +56,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: var(--background-color);
-  }
-  
-  .loading-spinner {
-    width: 4rem;
+    justify-content: center; /* Center vertically and horizontally */
+    height: 100vh; /* Take full viewport height */
+    background-color: var(--background-color); /* Ensure a clean background */
+    position: fixed; /* Ensures the loading screen stays fixed */
+    top: 0;
+    left: 0;
+    width: 100%; /* Full width */
+    z-index: 100; /* Place on top of other elements */
+}
+
+.loading-spinner {
+    width: 4rem; /* Spinner size */
     height: 4rem;
     border: 4px solid rgba(217, 119, 6, 0.3);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-  }
+    animation: spin 1s linear infinite; /* Spinning animation */
+    margin-bottom: 1rem; /* Provide spacing below spinner */
+}
   
   @keyframes spin {
     0% {
@@ -249,14 +254,25 @@
   }
   
   /* Menu Categories */
+
   .menu-categories {
     background-color: var(--white);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
-    position: sticky;
-    top: 1rem;
-  }
+    position: sticky; 
+    top: 0;
+    z-index: 10; 
+}
+
+.menu-items-container {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    overflow-y: scroll; /* Allows scrolling within the menu items */
+    max-height: calc(100vh - 4rem); /* Adjust for available screen space */
+}
   
   .menu-categories h2 {
     background-color: #92400e; /* amber-800 */
