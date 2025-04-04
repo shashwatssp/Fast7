@@ -10,20 +10,14 @@ function App() {
   const [user, loading] = useAuthState(auth);
 
   useEffect(() => {
-    // Check if user data is in local storage
     const storedUser = localStorage.getItem('user');
     if (storedUser && !user) {
-      // If user data is in storage but not in state, set it in state
-      // This is a simplified example. In practice, you might want to verify the token
       const userData = JSON.parse(storedUser);
-      // You might need to use a different method to set the user in your auth state
-      // This depends on how your Firebase setup is configured
+      // Set user state logic if needed
     }
   }, [user]);
 
   useEffect(() => {
-    console.log(user);
-    // When user state changes, update local storage
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
     } else {
@@ -31,29 +25,40 @@ function App() {
     }
   }, [user]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // Detect subdomain
+  const hostname = window.location.hostname; // e.g., foods.dash.netlify.app
+  const subdomain = hostname.split('.')[0]; // Extract 'foods' or the first part of the hostname
 
 
 
-  const subdomain = "foods";
+  const isSubdomain = subdomain !== "dash" && subdomain !== "www"; // Avoid root domain or common subdomains
+
   console.log("Detected subdomain:", subdomain);
+
+  const getSubdomainFromPath = () => {
+    const pathname = window.location.pathname; // e.g., "/foods"
+    const parts = pathname.split('/');
+    return parts.length > 1 ? parts[1] : null; // Return 'foods', or null if the path is empty
+  };
+
+  // Call the function to get the subdomain
+  const subdomain2 = getSubdomainFromPath();
+
 
   return (
     <Router>
       <Routes>
-        {subdomain ? (
-          <Route 
-            path="foods" 
-            element={<RestaurantPage subdomain={subdomain} />} 
+        {isSubdomain && subdomain!="localhost" && subdomain!="192" ? (
+          <Route
+            path="/*"
+            element={<RestaurantPage subdomain={subdomain} />}
           />
         ) : (
           <>
             <Route path="/" element={user ? <Navigate to="/onboarding" /> : <HomePage />} />
             <Route path="/onboarding" element={user ? <RestaurantOnboarding /> : <Navigate to="/" />} />
             <Route path="/home" element={user ? <HomePage /> : <Navigate to="/" />} />
-            <Route path="/:domainPrefix/*" element={<RestaurantPage />} />
+            <Route path="/*" element={<RestaurantPage subdomain ={subdomain2 || "foods"} />} />
           </>
         )}
       </Routes>
