@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom"
 import { doc, getDoc } from "firebase/firestore"
 import "./RestaurantPage.css"
 import { db } from "../../firebase"
-import { populateDatabase } from "../../utils/populateDatabase"
+
 
 interface MenuItem {
   id: string | number
@@ -49,8 +49,11 @@ interface CustomerInfo {
   address: string
 }
 
-const RestaurantPage: React.FC = () => {
-  const { domainPrefix, subdomain } = useParams<{ domainPrefix?: string; subdomain?: string }>()
+interface RestaurantPageProps {
+  subdomain?: string;  
+}
+
+const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   const [restaurant, setRestaurant] = useState<RestaurantData | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,26 +74,12 @@ const RestaurantPage: React.FC = () => {
   const [orderId, setOrderId] = useState<string>("")
 
   const getSubdomainFromUrl = () => {
-    return "foods"
+    return subdomain;
   }
 
   useEffect(() => {
 
-    populateDatabase();
-
-    let restaurantDomain = domainPrefix || subdomain || getSubdomainFromUrl()
-
-    if (!restaurantDomain && window.location.pathname) {
-      const pathParts = window.location.pathname.split("/")
-      if (pathParts.length > 1 && pathParts[1]) {
-        restaurantDomain = pathParts[1]
-      }
-    }
-
-
-    if (!restaurantDomain) {
-      restaurantDomain = "shas"
-    }
+    let restaurantDomain = getSubdomainFromUrl();
 
     const fetchRestaurantData = async () => {
       try {
@@ -150,7 +139,7 @@ const RestaurantPage: React.FC = () => {
     }
 
     fetchRestaurantData()
-  }, [domainPrefix, subdomain])
+  }, [subdomain])
 
   useEffect(() => {
     if (activeCategory && menuItems[activeCategory]) {
