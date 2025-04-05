@@ -37,7 +37,7 @@ function App() {
 
 
 
-  const isSubdomain = subdomain !== "Fast7" && subdomain !== "www"; // Avoid root domain or common subdomains
+  const isSubdomain = subdomain !== "fast7" && subdomain !== "www"; // Avoid root domain or common subdomains
 
   console.log("Detected subdomain:", subdomain);
 
