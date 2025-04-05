@@ -1,7 +1,7 @@
 /* Base Styles */
 :root {
     --primary-color: #d97706; /* amber-600 */
-    --primary-dark: #b45309; /* amber-700 */
+    --primary-dark: #09b450; /* amber-700 */
     --primary-light: #fcd34d; /* amber-300 */
     --background-color: #fffbeb; /* amber-50 */
     --text-color: #1f2937; /* gray-800 */
@@ -56,24 +56,24 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Center vertically and horizontally */
-    height: 100vh; /* Take full viewport height */
-    background-color: var(--background-color); /* Ensure a clean background */
-    position: fixed; /* Ensures the loading screen stays fixed */
+    justify-content: center; 
+    height: 100vh; 
+    background-color: var(--background-color); 
+    position: fixed; 
     top: 0;
     left: 0;
-    width: 100%; /* Full width */
-    z-index: 100; /* Place on top of other elements */
+    width: 100%; 
+    z-index: 100; 
 }
 
 .loading-spinner {
-    width: 4rem; /* Spinner size */
+    width: 4rem; 
     height: 4rem;
     border: 4px solid rgba(217, 119, 6, 0.3);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
-    animation: spin 1s linear infinite; /* Spinning animation */
-    margin-bottom: 1rem; /* Provide spacing below spinner */
+    animation: spin 1s linear infinite; 
+    margin-bottom: 1rem; 
 }
   
   @keyframes spin {
@@ -121,7 +121,7 @@
   /* Restaurant Header */
   .restaurant-header {
     position: relative;
-    background-color: #78350f; /* amber-900 */
+    background-color: #f83b3b; /* amber-900 */
     color: var(--white);
     padding: 4rem 1rem;
     text-align: center;
@@ -270,8 +270,8 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding: 1.5rem;
-    overflow-y: scroll; /* Allows scrolling within the menu items */
-    max-height: calc(100vh - 4rem); /* Adjust for available screen space */
+    overflow-y: scroll; 
+    max-height: calc(100vh - 4rem); 
 }
   
   .menu-categories h2 {

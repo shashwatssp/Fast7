@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import { doc, getDoc } from "firebase/firestore"
+import { addDoc, collection, doc, getDoc, serverTimestamp } from "firebase/firestore"
 import "./RestaurantPage.css"
 import { db } from "../../firebase"
 
@@ -41,6 +41,7 @@ interface RestaurantData {
   domainName: string
   menuSelections: MenuSelections
   restaurantInfo: RestaurantInfo
+  orderingEnabled: boolean;
 }
 
 interface CustomerInfo {
@@ -50,7 +51,7 @@ interface CustomerInfo {
 }
 
 interface RestaurantPageProps {
-  subdomain?: string;  
+  subdomain?: string;
 }
 
 const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
@@ -76,6 +77,8 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   const getSubdomainFromUrl = () => {
     return subdomain;
   }
+
+
 
   useEffect(() => {
 
@@ -103,7 +106,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         const allMenuItems: Record<string | number, MenuItem[]> = {}
 
         if (restaurantData.menuSelections?.standardCategories) {
-          
+
 
           for (const category of restaurantData.menuSelections.standardCategories) {
 
@@ -212,19 +215,45 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     setCheckoutStep("checkout")
   }
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const newOrderId = `ORD-${Date.now()}`
-    setOrderId(newOrderId)
-    setOrderPlaced(true)
-
-    setTimeout(() => {
-      setCart([])
-      setShowCart(false)
-      setCheckoutStep("cart")
-      setOrderPlaced(false)
-    }, 5000)
+  
+    try {
+      // Create a unique order ID
+      const newOrderId = `ORD-${Date.now()}`
+      
+      // Create order object
+      const orderData = {
+        id: newOrderId,
+        restaurantId: restaurant?.domainName,
+        customer: customerInfo,
+        items: cart,
+        total: calculateTotal(),
+        pending: true,
+        createdAt: serverTimestamp(),
+      }
+      
+      // Add to Firestore
+      const ordersRef = collection(db, "orders")
+      const docRef = await addDoc(ordersRef, orderData)
+      
+      console.log("Order added with ID: ", docRef.id)
+      
+      // Set order state for confirmation
+      setOrderId(newOrderId)
+      setOrderPlaced(true)
+      
+      // Reset cart after delay
+      setTimeout(() => {
+        setCart([])
+        setShowCart(false)
+        setCheckoutStep("cart")
+        setOrderPlaced(false)
+      }, 5000)
+    } catch (error) {
+      console.error("Error adding order: ", error)
+      // Handle error - perhaps show a message to the user
+    }
   }
 
   const handleBackToCart = () => {
@@ -346,9 +375,11 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                         <p className="item-price">₹{item.price}</p>
                       </div>
                       {item.description && <p className="item-description">{item.description}</p>}
-                      <button className="add-to-cart-btn" onClick={() => addToCart(item)}>
-                        Add to Cart
-                      </button>
+                      {restaurant.orderingEnabled && (
+                        <button className="add-to-cart-btn" onClick={() => addToCart(item)}>
+                          Add to Cart
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -358,10 +389,12 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         </div>
       </main>
 
-      <div className={`cart-button ${cart.length > 0 ? "has-items" : ""}`} onClick={toggleCart}>
-        <span className="cart-icon">🛒</span>
-        {cart.length > 0 && <span className="cart-count">{cart.length}</span>}
-      </div>
+      {restaurant.orderingEnabled && (
+        <div className={`cart-button ${cart.length > 0 ? "has-items" : ""}`} onClick={toggleCart}>
+          <span className="cart-icon">🛒</span>
+          {cart.length > 0 && <span className="cart-count">{cart.length}</span>}
+        </div>
+      )}
 
       {showCart && (
         <div className="cart-modal">
@@ -517,5 +550,5 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   )
 }
 
-export default RestaurantPage
+export default RestaurantPage;
 
