@@ -9,6 +9,16 @@
   font-family: 'Poppins', sans-serif;
 }
 
+  
+  .menu-loading {
+    width: 400px;
+    max-width: 100%; /* makes it responsive on smaller screens */
+    background-color: #f9f9f9; /* optional, just for visibility */
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
 .menu-step-title {
   font-size: 2rem;
   font-weight: 700;
@@ -16,6 +26,16 @@
   text-align: center;
   margin-bottom: 1rem;
 }
+
+.loading-spinner {
+    padding: 20px;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 
 .menu-step-description {
   text-align: center;

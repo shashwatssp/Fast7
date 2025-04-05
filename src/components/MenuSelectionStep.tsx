@@ -248,8 +248,10 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
         return (
             <div className="menu-step-container">
                 <div className="menu-loading">
+                <div style={{ height: '20rem' }}></div>
                     <div className="loading-spinner"></div>
                     <p>Loading menu options...</p>
+                    <div style={{ height: '200rem' }}></div>
                 </div>
             </div>
         );
