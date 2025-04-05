@@ -7,7 +7,7 @@ import HomePage from './components/HomePage';
 import RestaurantPage from './components/website/RestaurantPage';
 import { AuthProvider } from './auth/AuthContext';
 import RestaurantManagement from './components/manage/RestaurantManagement';
-import { populateDatabase } from './utils/populateDatabase';
+import EditMenuComponent from './components/manage/EditMenuComponent';
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -54,10 +54,9 @@ function App() {
   return (
     <AuthProvider>
 
-    
     <Router>
       <Routes>
-        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="dash69" ? (
+        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="dash77" ? (
           <Route
             path="/*"
             element={<RestaurantPage subdomain={subdomain} />}
@@ -68,9 +67,7 @@ function App() {
             <Route path="/" element={ <HomePage />} />
             <Route path="/onboarding" element={user ? <RestaurantOnboarding /> : <Navigate to="/" />} />
             <Route path="/home" element={user ? <HomePage /> : <Navigate to="/" />} />
-            
-            <Route path="/*" element={<RestaurantPage subdomain ={subdomain2 || "foods"} />} />
-            
+            <Route path="/*" element={<RestaurantPage subdomain ={subdomain2 || "foods"} />} />  
           </>
         )}
       </Routes>
