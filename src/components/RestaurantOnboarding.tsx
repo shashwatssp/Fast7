@@ -188,6 +188,7 @@ const RestaurantOnboarding = () => {
 
                         <div className="domain-input-container">
                             <div className="domain-input-wrapper">
+                            <span className="domain-suffix"></span>
                                 <input
                                     type="text"
                                     value={domainName}
@@ -198,7 +199,6 @@ const RestaurantOnboarding = () => {
                                     placeholder="yourrestaurant"
                                     className="domain-input"
                                 />
-                                <span className="domain-suffix">.dash.app</span>
                             </div>
                             <button
                                 className={`check-domain-btn ${isChecking ? 'checking' : ''}`}
@@ -212,7 +212,7 @@ const RestaurantOnboarding = () => {
                         {domainAvailable !== null && (
                             <div className={`domain-status ${domainAvailable ? 'available' : 'unavailable'}`}>
                                 {domainAvailable
-                                    ? <><span className="status-icon">✓</span> {domainName}.dash.app is available!</>
+                                    ? <><span className="status-icon">✓</span> dash69.netlify.app/{domainName} is available!</>
                                     : <><span className="status-icon">✗</span> This domain is already taken. Please try another.</>
                                 }
                             </div>

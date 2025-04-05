@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { Category, MenuItem } from '../types/Menu';
 
 const mockCategories: Category[] = [
