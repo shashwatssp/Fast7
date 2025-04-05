@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '../firebase'; // Ensure this path is correct
+import { auth, db } from '../firebase'; // Ensure this path is correct
 import './HomePage.css';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -10,13 +12,30 @@ const HomePage = () => {
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
-            // After successful sign-in, navigate to the onboarding page
-            navigate('/onboarding');
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+    
+
+            const restaurantsCollectionRef = collection(db, 'restaurants');
+            const querySnapshot = await getDocs(
+                query(restaurantsCollectionRef, where('ownerId', '==', user.uid))
+            );
+
+            console.log(querySnapshot);
+            console.log(querySnapshot[0]);
+    
+            if (!querySnapshot.empty) {
+                console.log("YES");
+                navigate('/manage');
+            } else {
+                console.log("NO");
+                navigate('/onboarding');
+            }
         } catch (error) {
             console.error('Error signing in with Google:', error);
         }
     };
+    
 
     return (
         <div className="animated-bg">

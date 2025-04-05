@@ -5,6 +5,8 @@ import { auth } from './firebase';
 import RestaurantOnboarding from './components/RestaurantOnboarding';
 import HomePage from './components/HomePage';
 import RestaurantPage from './components/website/RestaurantPage';
+import { AuthProvider } from './auth/AuthContext';
+import RestaurantManagement from './components/manage/RestaurantManagement';
 
 function App() {
   const [user, loading] = useAuthState(auth);
@@ -13,7 +15,10 @@ function App() {
     const storedUser = localStorage.getItem('user');
     if (storedUser && !user) {
       const userData = JSON.parse(storedUser);
-      // Set user state logic if needed
+      console.log("USER DATA");
+      console.log(userData);
+
+      console.log("USER", user);
     }
   }, [user]);
 
@@ -46,6 +51,9 @@ function App() {
 
 
   return (
+    <AuthProvider>
+
+    
     <Router>
       <Routes>
         {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="dash69" ? (
@@ -55,7 +63,8 @@ function App() {
           />
         ) : (
           <>
-            <Route path="/" element={user ? <Navigate to="/onboarding" /> : <HomePage />} />
+            <Route path="/manage" element={user ?  <RestaurantManagement /> :<HomePage />} />
+            <Route path="/" element={ <HomePage />} />
             <Route path="/onboarding" element={user ? <RestaurantOnboarding /> : <Navigate to="/" />} />
             <Route path="/home" element={user ? <HomePage /> : <Navigate to="/" />} />
             <Route path="/*" element={<RestaurantPage subdomain ={subdomain2 || "foods"} />} />
@@ -63,6 +72,7 @@ function App() {
         )}
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 
