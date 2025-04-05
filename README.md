@@ -1,8 +1,8 @@
-# Dash ⚡
+# fast7 ⚡
 
-**Launch Your Restaurant Online in Minutes!**
+**Launch Your Restaurant Online in 7 Minutes!**
 
-Dash is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Dash makes it easy to establish an online presence.
+fast7 is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Dash makes it easy to establish an online presence.
 
 ---
 
@@ -19,7 +19,7 @@ Dash is a React application designed to help restaurant owners create stunning w
 
 ## Features
 - **Mobile-First Design**: Fully responsive and optimized for mobile devices.
-- **Quick Setup**: Get your restaurant online in minutes.
+- **Quick Setup**: Get your restaurant online in 7 Minutes.
 - **Google Login Integration**: Easily continue with Google.
 - **Beautiful UI**: Designed with Tailwind CSS for a modern look and feel.
 - **Lightning-Fast Development**: Built with Vite for fast builds and hot module replacement.

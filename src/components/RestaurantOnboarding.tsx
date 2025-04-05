@@ -167,7 +167,7 @@ const RestaurantOnboarding = () => {
 
             <div className="onboarding-header">
                 <h1 className="onboarding-logo">
-                    Dash <span className="lightning">⚡</span>
+                    fast7 <span className="lightning">⚡</span>
                 </h1>
                 <div className="progress-indicator">
                     <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>

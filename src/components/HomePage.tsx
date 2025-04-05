@@ -49,7 +49,7 @@ const HomePage = () => {
                     {/* Header Section */}
                     <header className="header">
                         <h1 className="logo">
-                            Dash <span className="lightning">⚡</span>
+                            fast7 <span className="lightning">⚡</span>
                         </h1>
                     </header>
 
@@ -57,7 +57,7 @@ const HomePage = () => {
                     <main>
                         <div className="hero-card">
                             <h2 className="hero-title">
-                                Launch Your Restaurant Online in Minutes
+                                Launch Your Restaurant Online in 7 Minutes
                             </h2>
                             <p className="hero-subtitle">
                                 Create a stunning website for your restaurant in under 10 minutes and start taking orders today. No coding required.
@@ -97,12 +97,12 @@ const HomePage = () => {
 
                         {/* Features Section - Vertical Layout */}
                         <section className="features-section">
-                            <h3 className="features-title">Why Choose Dash?</h3>
+                            <h3 className="features-title">Why Choose fast7?</h3>
 
                             <div className="feature-card">
                                 <div className="feature-icon">🚀</div>
                                 <h3 className="feature-title">Quick Setup</h3>
-                                <p className="feature-description">Get your restaurant online in minutes, not days. Our intuitive interface makes it easy to upload your menu, set prices, and customize your branding without any technical skills.</p>
+                                <p className="feature-description">Get your restaurant online in 7 Minutes, not days. Our intuitive interface makes it easy to upload your menu, set prices, and customize your branding without any technical skills.</p>
                             </div>
 
                             <div className="feature-card">
@@ -129,7 +129,7 @@ const HomePage = () => {
 
                     {/* Footer Section */}
                     <footer className="footer">
-                        <p>&copy; {new Date().getFullYear()} Dash. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} fast7. All rights reserved.</p>
                     </footer>
                 </div>
             </div>
