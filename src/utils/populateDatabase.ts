@@ -3,43 +3,93 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Category, MenuItem } from '../types/Menu';
 
 const mockCategories: Category[] = [
-  { id: 101, name: "Main Course", icon: "🍲" },
-  { id: 102, name: "Appetizers", icon: "🥟" },
-  { id: 103, name: "Desserts", icon: "🍰" },
-  { id: 104, name: "Beverages", icon: "🥤" },
-  { id: 105, name: "Bread & Rice", icon: "🍚" }
+  { id: 201, name: "South Indian", icon: "🍛" },
+  { id: 202, name: "Mexican", icon: "🌮" },
+  { id: 203, name: "Chinese", icon: "🥢" },
+  { id: 204, name: "Italian", icon: "🍝" },
+  { id: 205, name: "Sindhi", icon: "🍲" }
 ];
 
 const mockItems: Record<number, Omit<MenuItem, 'categoryId'>[]> = {
-  101: [
-    { id: 501, name: "Kadhai Paneer", description: "Cottage cheese cooked with bell peppers in a spicy masala", image: "https://www.secondrecipe.com/wp-content/uploads/2020/05/dhaba-style-kadai-paneer-001.jpg" },
-    { id: 502, name: "Shahi Paneer", description: "Cottage cheese in a rich and creamy tomato sauce", image: "https://recipes.timesofindia.com/photo/53110729.cms?imgsize=160019" },
-    { id: 503, name: "Butter Chicken", description: "Tender chicken in a rich buttery tomato sauce", image: "https://www.licious.in/blog/wp-content/uploads/2020/10/butter-chicken-.jpg" },
-    { id: 504, name: "Chicken Tikka Masala", description: "Grilled chicken chunks in a spiced curry sauce", image: "https://www.licious.in/blog/wp-content/uploads/2020/12/Chicken-Tikka-Masala-min.jpg" },
-    { id: 505, name: "Dal Makhani", description: "Black lentils simmered overnight with butter and cream", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" }
+  201: [
+    { 
+      id: 1001, 
+      name: "Idli", 
+      description: "Steamed rice cakes made from fermented batter, served with sambar and coconut chutney", 
+      image: "https://www.gettyimages.com/detail/photo/idli-with-coconut-chutney-and-sambhar-royalty-free-image/1158623408" 
+    },
+    { 
+      id: 1002, 
+      name: "Masala Dosa", 
+      description: "Crispy rice crepe stuffed with spiced potatoes, served with chutneys", 
+      image: "https://www.istockphoto.com/photo/masala-dosa-is-a-popular-south-indian-breakfast-dish-royalty-free-image/1325179956" 
+    }
   ],
-  102: [
-    { id: 601, name: "Paneer Tikka", description: "Marinated cottage cheese chunks grilled in a tandoor", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 602, name: "Spring Rolls", description: "Crispy rolls filled with vegetables", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 603, name: "Samosas", description: "Triangular pastry filled with spiced potatoes and peas", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 604, name: "Chicken 65", description: "Spicy deep-fried chicken bites", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" }
+  202: [
+    { 
+      id: 2001, 
+      name: "Tacos Al Pastor", 
+      description: "Marinated pork cooked on vertical spit, served with pineapple and cilantro", 
+      image: "https://www.istockphoto.com/photo/authentic-mexican-tacos-al-pastor-with-pineapple-cilantro-and-onion-gm1296057240-389657081" 
+    },
+    { 
+      id: 2002, 
+      name: "Chiles en Nogada", 
+      description: "Poblano peppers stuffed with meat mixture, topped with walnut sauce and pomegranate", 
+      image: "https://www.istockphoto.com/photo/chiles-en-nogada-gm1139961862-304955106" 
+    }
   ],
-  103: [
-    { id: 701, name: "Gulab Jamun", description: "Deep-fried milk solids soaked in sugar syrup", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 702, name: "Rasmalai", description: "Soft cottage cheese dumplings in sweetened milk", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 703, name: "Kheer", description: "Rice pudding with nuts and cardamom", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" }
+  203: [
+    { 
+      id: 3001, 
+      name: "Peking Duck", 
+      description: "Crispy-skinned roasted duck served with pancakes and hoisin sauce", 
+      image: "https://www.istockphoto.com/photo/peking-duck-gm497227083-41588899" 
+    },
+    { 
+      id: 3002, 
+      name: "Xiao Long Bao", 
+      description: "Soup dumplings filled with pork and hot broth", 
+      image: "https://www.istockphoto.com/photo/shanghai-soup-dumplings-gm1213999015-352952112" 
+    }
   ],
-  104: [
-    { id: 801, name: "Mango Lassi", description: "Yogurt drink blended with mango and sugar", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 802, name: "Masala Chai", description: "Spiced milk tea", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 803, name: "Fresh Lime Soda", description: "Refreshing lime juice with soda water", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" }
+  204: [
+    { 
+      id: 4001, 
+      name: "Pizza Margherita", 
+      description: "Neapolitan pizza with tomato, fresh mozzarella, and basil", 
+      image: "https://www.istockphoto.com/photo/pizza-margherita-gm1280329631-379406495" 
+    },
+    { 
+      id: 4002, 
+      name: "Osso Buco", 
+      description: "Milanese veal shanks braised with vegetables and white wine", 
+      image: "https://www.istockphoto.com/photo/osso-buco-gm518022095-48858847" 
+    }
   ],
-  105: [
-    { id: 901, name: "Butter Naan", description: "Soft leavened bread brushed with butter", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 902, name: "Garlic Naan", description: "Naan topped with garlic and herbs", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" },
-    { id: 903, name: "Jeera Rice", description: "Basmati rice cooked with cumin seeds", image: "http://3.bp.blogspot.com/-uck7Fi_bRfw/UA7ogu0DrzI/AAAAAAAARSI/rmu9iluFJG0/s1600/cb+ten.jpg" }
+  205: [
+    { 
+      id: 5001, 
+      name: "Daal Pakwaan", 
+      description: "Crispy fried bread served with spiced chana dal", 
+      image: "https://www.vegrecipesofindia.com/wp-content/uploads/2021/04/dal-pakwan-1.jpg" 
+    },
+    { 
+      id: 5002, 
+      name: "Sindhi Kadhi", 
+      description: "Tangy gram flour curry with vegetables and pakoras", 
+      image: "https://www.vegrecipesofindia.com/wp-content/uploads/2020/04/sindhi-kadhi-1.jpg" 
+    },
+    { 
+      id: 5003, 
+      name: "Sindhi Kachori Bhaji", 
+      description: "Spiced potato curry served with crispy kachoris", 
+      image: "https://www.vegrecipesofindia.com/wp-content/uploads/2019/09/kachori-sabzi-1.jpg" 
+    }
   ]
 };
+
+
 
 export const populateDatabase = async (): Promise<void> => {
   try {

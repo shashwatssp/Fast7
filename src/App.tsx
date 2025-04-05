@@ -56,7 +56,7 @@ function App() {
 
     <Router>
       <Routes>
-        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="dash77" ? (
+        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="fast7" ? (
           <Route
             path="/*"
             element={<RestaurantPage subdomain={subdomain} />}
