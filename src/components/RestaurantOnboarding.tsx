@@ -110,7 +110,7 @@ const RestaurantOnboarding = () => {
             console.log("Website created successfully with data:", restaurantData);
 
             // Set website URL and show success popup
-            setNewWebsiteUrl(`https://fast7.netlify.app/${domainName}`);
+            setNewWebsiteUrl(`https://Fast7.netlify.app/${domainName}`);
             setShowSuccessPopup(true);
 
         } catch (error) {
@@ -157,7 +157,7 @@ const RestaurantOnboarding = () => {
                         </button>
                         <button
                             className="go-to-dashboard-btn"
-                            onClick={() => window.location.href = 'https://fast7.netlify.app/manage'}
+                            onClick={() => window.location.href = 'https://Fast7.netlify.app/manage'}
                         >
                             Go to Dashboard
                         </button>
@@ -167,7 +167,7 @@ const RestaurantOnboarding = () => {
 
             <div className="onboarding-header">
                 <h1 className="onboarding-logo">
-                    fast7 <span className="lightning">⚡</span>
+                    Fast7 <span className="lightning">⚡</span>
                 </h1>
                 <div className="progress-indicator">
                     <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>1</div>
@@ -212,7 +212,7 @@ const RestaurantOnboarding = () => {
                         {domainAvailable !== null && (
                             <div className={`domain-status ${domainAvailable ? 'available' : 'unavailable'}`}>
                                 {domainAvailable
-                                    ? <><span className="status-icon">✓</span> fast7.netlify.app/{domainName} is available!</>
+                                    ? <><span className="status-icon">✓</span> Fast7.netlify.app/{domainName} is available!</>
                                     : <><span className="status-icon">✗</span> This domain is already taken. Please try another.</>
                                 }
                             </div>
@@ -340,7 +340,7 @@ const RestaurantOnboarding = () => {
                         <div className="summary-card">
                             <div className="summary-section">
                                 <h3>Website Domain</h3>
-                                <p className="domain-preview">fast7.netlify.app/{domainName}</p>
+                                <p className="domain-preview">Fast7.netlify.app/{domainName}</p>
                             </div>
 
                             <div className="summary-section">

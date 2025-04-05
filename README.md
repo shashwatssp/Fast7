@@ -1,8 +1,8 @@
-# fast7 ⚡
+# Fast7 ⚡
 
 **Launch Your Restaurant Online in 7 Minutes!**
 
-fast7 is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Dash makes it easy to establish an online presence.
+Fast7 is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Fast7 makes it easy to establish an online presence.
 
 ---
 
@@ -40,8 +40,8 @@ fast7 is a React application designed to help restaurant owners create stunning 
 Follow these steps to set up the project locally:
 
 1. Clone the repository:
-git clone https://github.com/shashwatssp/Dash.git
-cd Dash
+git clone https://github.com/shashwatssp/Fast7.git
+cd Fast7
 
 2. Install dependencies
 npm install

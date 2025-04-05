@@ -32,12 +32,12 @@ function App() {
   }, [user]);
 
   // Detect subdomain
-  const hostname = window.location.hostname; // e.g., foods.dash.netlify.app
+  const hostname = window.location.hostname; // e.g., foods.Fast7.netlify.app
   const subdomain = hostname.split('.')[0]; // Extract 'foods' or the first part of the hostname
 
 
 
-  const isSubdomain = subdomain !== "dash" && subdomain !== "www"; // Avoid root domain or common subdomains
+  const isSubdomain = subdomain !== "Fast7" && subdomain !== "www"; // Avoid root domain or common subdomains
 
   console.log("Detected subdomain:", subdomain);
 
@@ -56,7 +56,7 @@ function App() {
 
     <Router>
       <Routes>
-        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="fast7" ? (
+        {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="Fast7" ? (
           <Route
             path="/*"
             element={<RestaurantPage subdomain={subdomain} />}

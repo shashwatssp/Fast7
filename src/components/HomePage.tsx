@@ -49,7 +49,7 @@ const HomePage = () => {
                     {/* Header Section */}
                     <header className="header">
                         <h1 className="logo">
-                            fast7 <span className="lightning">⚡</span>
+                            Fast7 <span className="lightning">⚡</span>
                         </h1>
                     </header>
 
@@ -97,7 +97,7 @@ const HomePage = () => {
 
                         {/* Features Section - Vertical Layout */}
                         <section className="features-section">
-                            <h3 className="features-title">Why Choose fast7?</h3>
+                            <h3 className="features-title">Why Choose Fast7?</h3>
 
                             <div className="feature-card">
                                 <div className="feature-icon">🚀</div>
@@ -129,7 +129,7 @@ const HomePage = () => {
 
                     {/* Footer Section */}
                     <footer className="footer">
-                        <p>&copy; {new Date().getFullYear()} fast7. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} Fast7. All rights reserved.</p>
                     </footer>
                 </div>
             </div>
