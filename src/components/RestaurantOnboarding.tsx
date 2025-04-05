@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './RestaurantOnboarding.css';
 import MenuSelectionStep from './MenuSelectionStep';
 import { db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useAuth } from '../auth/AuthContext';
 
 interface MenuSelections {
-  standardCategories: (number | string)[];
-  standardItems: Record<number | string, (number | string)[]>;
-  customCategories: string[];
-  customItems: Record<string, string[]>;
+    standardCategories: (number | string)[];
+    standardItems: Record<number | string, (number | string)[]>;
+    customCategories: string[];
+    customItems: Record<string, string[]>;
 }
 
 const RestaurantOnboarding = () => {
+    const [orderingEnabled, setOrderingEnabled] = useState(true);
+    const { currentUser } = useAuth();
     const [step, setStep] = useState(1);
     const [domainName, setDomainName] = useState('');
     const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
+    const [isChecking, setIsChecking] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [newWebsiteUrl, setNewWebsiteUrl] = useState('');
     const [restaurantInfo, setRestaurantInfo] = useState({
         name: '',
         bio: '',
@@ -29,26 +35,30 @@ const RestaurantOnboarding = () => {
         customItems: {}
     });
 
-    // Mock function to check domain availability
-    const checkDomainAvailability = (domain: string): Promise<boolean> => {
-        // This would be replaced with a Firebase query
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                // Mock check - domains with "taken" are unavailable
-                resolve(!domain.includes('taken'));
-            }, 800);
-        });
+    // Check domain availability in Firestore
+    const checkDomainAvailability = async (domain: string): Promise<boolean> => {
+        if (!domain.trim()) return false;
+
+        const domainPrefix = domain.split('.')[0];
+        const docRef = doc(db, 'restaurants', domainPrefix);
+        const docSnap = await getDoc(docRef);
+
+        // If document exists, domain is not available
+        return !docSnap.exists();
     };
 
     const handleDomainCheck = async () => {
         if (!domainName.trim()) return;
-        
-        const isAvailable = await checkDomainAvailability(domainName);
-        setDomainAvailable(isAvailable);
-        
-        if (isAvailable) {
-            // Wait a moment to show the success message before proceeding
-            setTimeout(() => setStep(2), 1000);
+
+        setIsChecking(true);
+        try {
+            const isAvailable = await checkDomainAvailability(domainName);
+            setDomainAvailable(isAvailable);
+        } catch (error) {
+            console.error("Error checking domain availability:", error);
+            alert("There was an error checking domain availability. Please try again.");
+        } finally {
+            setIsChecking(false);
         }
     };
 
@@ -62,7 +72,6 @@ const RestaurantOnboarding = () => {
 
     const handleSubmitInfo = (e: React.FormEvent) => {
         e.preventDefault();
-        // This would save the basic info to Firebase
         setStep(3);
     };
 
@@ -74,9 +83,10 @@ const RestaurantOnboarding = () => {
     const handleCreateWebsite = async () => {
         try {
             const domainPrefix = domainName.split('.')[0];
-            
+
             const restaurantData = {
                 domainName: domainName,
+                ownerId: currentUser?.uid,
                 restaurantInfo: {
                     name: restaurantInfo.name,
                     bio: restaurantInfo.bio,
@@ -90,25 +100,70 @@ const RestaurantOnboarding = () => {
                     customCategories: menuSelections.customCategories,
                     customItems: menuSelections.customItems
                 },
+                orderingEnabled: true, // Added orderingEnabled field
                 createdAt: new Date()
             };
-            
+
             await setDoc(doc(db, 'restaurants', domainPrefix), restaurantData);
-            
+
             console.log("Website created successfully with data:", restaurantData);
-            alert("Your website has been created successfully!");
-            
-            // Optional: Redirect to the new website
-            // window.location.href = `https://${domainName}`;
+
+            // Set website URL and show success popup
+            setNewWebsiteUrl(`https://${domainName}.dash.app`);
+            setShowSuccessPopup(true);
+
         } catch (error) {
             console.error("Error creating website:", error);
             alert("There was an error creating your website. Please try again.");
         }
     };
-    
 
     return (
         <div className="onboarding-container">
+            {showSuccessPopup && (
+                <div className="success-popup-overlay">
+                    <div className="success-popup">
+                        <div className="success-icon">
+                            <svg viewBox="0 0 52 52" className="checkmark">
+                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                            </svg>
+                        </div>
+                        <h2>Congratulations!</h2>
+                        <p>Your website is now live at:</p>
+                        <a href={newWebsiteUrl} target="_blank" rel="noopener noreferrer" className="website-url">
+                            {newWebsiteUrl}
+                        </a>
+                        <div className="success-features">
+                            <div className="feature-item">
+                                <div className="feature-checkbox">✓</div>
+                                <p>Website is live</p>
+                            </div>
+                            <div className="feature-item">
+                                <div className="feature-checkbox">✓</div>
+                                <p>Online ordering enabled</p>
+                            </div>
+                            <div className="feature-item">
+                                <div className="feature-checkbox">✓</div>
+                                <p>Restaurant dashboard ready</p>
+                            </div>
+                        </div>
+                        <button
+                            className="visit-website-btn"
+                            onClick={() => window.location.href = newWebsiteUrl}
+                        >
+                            Visit Your Website
+                        </button>
+                        <button
+                            className="go-to-dashboard-btn"
+                            onClick={() => window.location.href = '/dashboard'}
+                        >
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="onboarding-header">
                 <h1 className="onboarding-logo">
                     Dash <span className="lightning">⚡</span>
@@ -129,7 +184,7 @@ const RestaurantOnboarding = () => {
                     <div className="onboarding-step domain-step">
                         <h2>Let's create your restaurant website</h2>
                         <p className="step-description">First, choose a unique domain name for your restaurant website.</p>
-                        
+
                         <div className="domain-input-container">
                             <div className="domain-input-wrapper">
                                 <input
@@ -144,18 +199,18 @@ const RestaurantOnboarding = () => {
                                 />
                                 <span className="domain-suffix">.dash.app</span>
                             </div>
-                            <button 
-                                className="check-domain-btn"
+                            <button
+                                className={`check-domain-btn ${isChecking ? 'checking' : ''}`}
                                 onClick={handleDomainCheck}
-                                disabled={!domainName.trim()}
+                                disabled={!domainName.trim() || isChecking}
                             >
-                                Check Availability
+                                {isChecking ? 'Checking...' : 'Check Availability'}
                             </button>
                         </div>
 
                         {domainAvailable !== null && (
                             <div className={`domain-status ${domainAvailable ? 'available' : 'unavailable'}`}>
-                                {domainAvailable 
+                                {domainAvailable
                                     ? <><span className="status-icon">✓</span> {domainName}.dash.app is available!</>
                                     : <><span className="status-icon">✗</span> This domain is already taken. Please try another.</>
                                 }
@@ -170,6 +225,17 @@ const RestaurantOnboarding = () => {
                                 <li>Avoid special characters and numbers if possible</li>
                             </ul>
                         </div>
+
+                        <div className="form-buttons domain-buttons">
+                            <button
+                                type="button"
+                                className="next-button"
+                                onClick={() => setStep(2)}
+                                disabled={!domainAvailable}
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -177,7 +243,7 @@ const RestaurantOnboarding = () => {
                     <div className="onboarding-step info-step">
                         <h2>Tell us about your restaurant</h2>
                         <p className="step-description">This information will be displayed on your website.</p>
-                        
+
                         <form onSubmit={handleSubmitInfo} className="restaurant-info-form">
                             <div className="form-group">
                                 <label htmlFor="name">Restaurant Name</label>
@@ -191,7 +257,7 @@ const RestaurantOnboarding = () => {
                                     required
                                 />
                             </div>
-                            
+
                             <div className="form-group">
                                 <label htmlFor="bio">Restaurant Bio</label>
                                 <textarea
@@ -259,9 +325,9 @@ const RestaurantOnboarding = () => {
                 )}
 
                 {step === 3 && (
-                    <MenuSelectionStep 
-                        onNext={handleMenuNext} 
-                        onBack={() => setStep(2)} 
+                    <MenuSelectionStep
+                        onNext={handleMenuNext}
+                        onBack={() => setStep(2)}
                     />
                 )}
 
@@ -269,7 +335,7 @@ const RestaurantOnboarding = () => {
                     <div className="onboarding-step summary-step">
                         <h2>Almost there!</h2>
                         <p className="step-description">Review your information before creating your website.</p>
-                        
+
                         <div className="summary-card">
                             <div className="summary-section">
                                 <h3>Website Domain</h3>
@@ -310,9 +376,21 @@ const RestaurantOnboarding = () => {
                                     <span className="detail-label">Total Menu Items:</span>
                                     <span className="detail-value">
                                         {Object.values(menuSelections.standardItems).reduce((count, items) => count + items.length, 0) +
-                                         Object.values(menuSelections.customItems).reduce((count, items) => count + items.length, 0)}
+                                            Object.values(menuSelections.customItems).reduce((count, items) => count + items.length, 0)}
                                     </span>
                                 </div>
+                            </div>
+                            <div className="summary-section">
+                                <h3>Enable Ordering</h3>
+                                <label className="toggle-label">
+                                    <span>Enable Ordering</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={orderingEnabled}
+                                        onChange={(e) => setOrderingEnabled(e.target.checked)}
+                                    />
+                                </label>
+                                <p className="toggle-description">Don't worry, you can change it anytime.</p>
                             </div>
 
                             <div className="next-steps-info">
