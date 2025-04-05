@@ -3,6 +3,8 @@ import './RestaurantManagement.css';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import EditMenuComponent from './EditMenuComponent';
 
 const RestaurantManagement = () => {
     const [isOrderingEnabled, setIsOrderingEnabled] = useState(false);
@@ -14,47 +16,65 @@ const RestaurantManagement = () => {
     const [pendingOrders, setPendingOrders] = useState([]);
     const [pastOrders, setPastOrders] = useState([]);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showMenuSelection, setShowMenuSelection] = useState(false);
+    const [showEditMenu, setShowEditMenu] = useState(false);
+    const navigate = useNavigate();
+
+    const handleEditMenuClick = () => {
+        setShowMenuSelection(true);
+    };
+    const fetchRestaurantData = async () => {
+        if (!currentUser) {
+            setLoading(false);
+            setError("You must be logged in to view this page");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            // Create a query to find restaurants where ownerId matches currentUser.uid
+            const restaurantsRef = collection(db, 'restaurants');
+            const q = query(restaurantsRef, where("ownerId", "==", currentUser.uid));
+            const querySnapshot = await getDocs(q);
+            console.log(querySnapshot[0]);
+
+            if (querySnapshot.empty) {
+                setError("No restaurants found for your account");
+            } else {
+                // Get the first restaurant (assuming a user has one restaurant for simplicity)
+                const restaurantDoc = querySnapshot.docs[0];
+                const data = restaurantDoc.data();
+                setRestaurantData({
+                    id: restaurantDoc.id,
+                    ...data
+                });
+                setIsOrderingEnabled(data.orderingEnabled);
+                fetchOrders(restaurantDoc.id);
+            }
+        } catch (err) {
+            console.error("Error fetching restaurant data:", err);
+            setError("An error occurred while fetching your restaurant data");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchRestaurantData = async () => {
-            if (!currentUser) {
-                setLoading(false);
-                setError("You must be logged in to view this page");
-                return;
-            }
 
-            try {
-                setLoading(true);
-                // Create a query to find restaurants where ownerId matches currentUser.uid
-                const restaurantsRef = collection(db, 'restaurants');
-                const q = query(restaurantsRef, where("ownerId", "==", currentUser.uid));
-                const querySnapshot = await getDocs(q);
-                console.log("ENTER");
-                console.log(querySnapshot[0]);
-
-                if (querySnapshot.empty) {
-                    setError("No restaurants found for your account");
-                } else {
-                    // Get the first restaurant (assuming a user has one restaurant for simplicity)
-                    const restaurantDoc = querySnapshot.docs[0];
-                    const data = restaurantDoc.data();
-                    setRestaurantData({
-                        id: restaurantDoc.id,
-                        ...data
-                    });
-                    setIsOrderingEnabled(data.orderingEnabled);
-                    fetchOrders(restaurantDoc.id);
-                }
-            } catch (err) {
-                console.error("Error fetching restaurant data:", err);
-                setError("An error occurred while fetching your restaurant data");
-            } finally {
-                setLoading(false);
-            }
-        };
 
         fetchRestaurantData();
     }, [currentUser]);
+
+    const handleEditMenuClose = (updatedMenu) => {
+        // Simply set showMenuSelection to false to hide the EditMenuComponent
+        setShowMenuSelection(false);
+        
+        // If menu was updated (not just canceled), refresh data
+        if (updatedMenu) {
+            // Refresh restaurant data or update the local state
+            fetchRestaurantData();
+        }
+    };
 
     const fetchOrders = async (restaurantId) => {
         try {
@@ -79,6 +99,11 @@ const RestaurantManagement = () => {
         } catch (err) {
             console.error("Error fetching orders:", err);
         }
+    };
+
+
+    const handleBack = () => {
+        setShowMenuSelection(false); // Come back to current page
     };
 
     const toggleOrdering = async () => {
@@ -154,6 +179,16 @@ const RestaurantManagement = () => {
                 <p>You don't have any restaurants associated with your account.</p>
                 <button onClick={() => window.location.href = "/create"}>Create a Restaurant</button>
             </div>
+        );
+    }
+
+    if (showMenuSelection) {
+        return (
+            <EditMenuComponent 
+                existingMenuSelections={restaurantData.menuSelections}
+                restaurantId={restaurantData.id}
+                onClose={handleEditMenuClose}
+            />
         );
     }
 
@@ -318,14 +353,16 @@ const RestaurantManagement = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div className="card-footer">
-                                <a href="#" className="action-button">
-                                    Edit Menu
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </a>
-                            </div>
+                            {!showMenuSelection ? (
+                                <div className="card-footer">
+                                    <a href="#" className="action-button" onClick={handleEditMenuClick}>
+                                        Edit Menu
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </a>
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Orders Card */}
@@ -390,11 +427,11 @@ const RestaurantManagement = () => {
                                 <h2>Order Details</h2>
                                 <p>Order ID: {selectedOrder.id}</p>
                                 <p>Customer: {selectedOrder.customer.name}</p>
-                                <p>Total: ${selectedOrder.total}</p>
+                                <p>Total: ₹{selectedOrder.total}</p>
                                 <h3>Items:</h3>
                                 <ul>
                                     {selectedOrder.items.map((item, index) => (
-                                        <li key={index}>{item.name} - Quantity: {item.quantity}</li>
+                                        <li key={index}>{item.name}</li>
                                     ))}
                                 </ul>
                                 <button onClick={() => setSelectedOrder(null)}>Close</button>
