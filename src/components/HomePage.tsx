@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase'; // Ensure this path is correct
@@ -9,12 +9,13 @@ import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firesto
 const HomePage = () => {
     const navigate = useNavigate();
 
+
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-    
+
 
             const restaurantsCollectionRef = collection(db, 'restaurants');
             const querySnapshot = await getDocs(
@@ -23,7 +24,7 @@ const HomePage = () => {
 
             console.log(querySnapshot);
             console.log(querySnapshot[0]);
-    
+
             if (!querySnapshot.empty) {
                 console.log("YES");
                 navigate('/manage');
@@ -35,7 +36,11 @@ const HomePage = () => {
             console.error('Error signing in with Google:', error);
         }
     };
-    
+
+    const handleDashboardOpen = () => {
+        navigate('/manage');
+    };
+
 
     return (
         <div className="animated-bg">
@@ -71,6 +76,25 @@ const HomePage = () => {
                             </button>
                         </div>
 
+                        {/* Spacer div for vertical spacing */}
+                        <div className="spacer" style={{ height: '20px' }}></div>
+
+                        {/* Dashboard Access Card - New section */}
+                        <div className="hero-card dashboard-card-two">
+                            <h2 className="hero-title">
+                                Already Onboarded?
+                            </h2>
+                            <p className="hero-subtitle">
+                                If you've already set up your restaurant, access your dashboard to manage orders, update your menu, and more.
+                            </p>
+                            <button
+                                className="second-button"
+                                onClick={handleDashboardOpen}
+                            >
+                                Open Dashboard
+                            </button>
+                        </div>
+
                         {/* Features Section - Vertical Layout */}
                         <section className="features-section">
                             <h3 className="features-title">Why Choose Dash?</h3>
@@ -97,7 +121,7 @@ const HomePage = () => {
                         {/* Call to Action Section */}
                         <section className="cta-section">
                             <p className="cta-text">Ready to grow your restaurant business?</p>
-                            <button className="primary-button" onClick={handleGoogleSignIn}>
+                            <button className="third-button" onClick={handleGoogleSignIn}>
                                 Get Started Now
                             </button>
                         </section>
