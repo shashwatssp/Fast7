@@ -92,7 +92,8 @@ const RestaurantOnboarding = () => {
                     bio: restaurantInfo.bio,
                     phone: restaurantInfo.phone,
                     email: restaurantInfo.email,
-                    address: restaurantInfo.address
+                    address: restaurantInfo.address,
+                    totalSalesDone: 0,
                 },
                 menuSelections: {
                     standardCategories: menuSelections.standardCategories,
@@ -100,7 +101,7 @@ const RestaurantOnboarding = () => {
                     customCategories: menuSelections.customCategories,
                     customItems: menuSelections.customItems
                 },
-                orderingEnabled: true, // Added orderingEnabled field
+                orderingEnabled: orderingEnabled,
                 createdAt: new Date()
             };
 
@@ -109,7 +110,7 @@ const RestaurantOnboarding = () => {
             console.log("Website created successfully with data:", restaurantData);
 
             // Set website URL and show success popup
-            setNewWebsiteUrl(`https://${domainName}.dash.app`);
+            setNewWebsiteUrl(`https://dash69.netlify.app/${domainName}`);
             setShowSuccessPopup(true);
 
         } catch (error) {
@@ -156,7 +157,7 @@ const RestaurantOnboarding = () => {
                         </button>
                         <button
                             className="go-to-dashboard-btn"
-                            onClick={() => window.location.href = '/dashboard'}
+                            onClick={() => window.location.href = 'https://dash69.netlify.app/manage'}
                         >
                             Go to Dashboard
                         </button>

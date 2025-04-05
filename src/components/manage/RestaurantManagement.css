@@ -603,4 +603,54 @@ html {
   .order-modal-content button:hover {
     background-color: #45a049;
   }
+
+  .sales-card {
+    background: linear-gradient(135deg, #f8f4e3, #e6c560);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+    transition: all 0.3s ease;
+}
+
+.sales-card .card-icon svg {
+    stroke: #b8860b; /* Dark Gold */
+}
+
+.sales-card .card-title {
+    color: #7d6608;
+    font-weight: 700;
+}
+
+.sales-card .card-description {
+    color: #8b7513;
+}
+
+.total-sales {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 150px;
+    position: relative;
+}
+
+.total-sales .stat-value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #b8860b; /* Dark Gold */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: 'Montserrat', sans-serif;
+    position: relative;
+}
+
+
+.sales-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+}
+
+
+@keyframes goldShimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
   

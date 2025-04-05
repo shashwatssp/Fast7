@@ -98,21 +98,21 @@ const RestaurantManagement = () => {
     const toggleOrderStatus = async (orderId) => {
         try {
             console.log("orderId ", orderId);
-            
+
             // Query to find the order document with matching id field
             const ordersRef = collection(db, 'orders');
             const q = query(ordersRef, where("id", "==", orderId));
             const querySnapshot = await getDocs(q);
-            
+
             if (querySnapshot.empty) {
                 console.error("No order found with ID:", orderId);
                 return;
             }
-            
+
             // Update the first matching document
             const orderDoc = querySnapshot.docs[0];
             await updateDoc(orderDoc.ref, { pending: false });
-            
+
             console.log("Order status updated successfully");
             fetchOrders(restaurantData.id);
         } catch (err) {
@@ -126,7 +126,13 @@ const RestaurantManagement = () => {
 
     // If loading, show a loading spinner
     if (loading) {
-        return <div className="loading-spinner">Loading...</div>;
+
+        return (
+            <div className="restaurant-loading">
+                <div className="loading-spinner"></div>
+                <p>Hold Tight...</p>
+            </div>
+        )
     }
 
     // If error, show error message
@@ -273,7 +279,7 @@ const RestaurantManagement = () => {
                                 <h2>Order Details</h2>
                                 <p>Order ID: {selectedOrder.id}</p>
                                 <p>Customer: {selectedOrder.customer.name}</p>
-                                <p>Total: ${selectedOrder.total}</p>
+                                <p>Total: ₹{selectedOrder.total}</p>
                                 <h3>Items:</h3>
                                 <ul>
                                     {selectedOrder.items.map((item, index) => (
@@ -354,52 +360,28 @@ const RestaurantManagement = () => {
                                 </a>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Recent Orders */}
-                    <div className="feature-card orders-list-card">
-                        <h2 className="card-title">Recent Orders</h2>
-                        <p className="card-description">Latest orders from your customers</p>
-
-                        <div className="orders-list">
-                            <div className="no-orders-message">
-                                <p>No recent orders to display.</p>
+                        {/* Total Sales Card */}
+                        <div className="feature-card sales-card">
+                            <div className="card-header">
+                                <div className="card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
+                                </div>
+                                <div className="card-title-container">
+                                    <h2 className="card-title">Total Sales</h2>
+                                    <p className="card-description">Your restaurant's lifetime sales</p>
+                                </div>
+                            </div>
+                            <div className="card-content">
+                                <div className="stat-container total-sales">
+                                    <span className="stat-value">₹{restaurantData.restaurantInfo.totalSalesDone.toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
-
-                        <div className="card-footer">
-                            <a href="#" className="primary-button">
-                                View All Orders
-                            </a>
-                        </div>
                     </div>
 
-                    {/* Pending Orders */}
-                    {/* <div className="feature-card orders-card">
-                        <h2 className="card-title">Pending Orders</h2>
-                        <div className="orders-list">
-                            {pendingOrders.map((order) => (
-                                <div key={order.id} className="order-item">
-                                    <span onClick={() => setSelectedOrder(order)}>Order #{order.id}</span>
-                                    <button onClick={() => toggleOrderStatus(order.id)}>Mark as Fulfilled</button>
-                                </div>
-                            ))}
-                            {pendingOrders.length === 0 && <p>No pending orders</p>}
-                        </div>
-                    </div> */}
-
-                    {/* Past Orders */}
-                    {/* <div className="feature-card orders-card">
-                        <h2 className="card-title">Past Orders</h2>
-                        <div className="orders-list">
-                            {pastOrders.map((order) => (
-                                <div key={order.id} className="order-item" onClick={() => setSelectedOrder(order)}>
-                                    <span>Order #{order.id}</span>
-                                </div>
-                            ))}
-                            {pastOrders.length === 0 && <p>No past orders</p>}
-                        </div>
-                    </div> */}
 
                     {/* Order Details Modal */}
                     {selectedOrder && (
@@ -419,6 +401,8 @@ const RestaurantManagement = () => {
                             </div>
                         </div>
                     )}
+
+
                 </main>
             </div>
         </div>

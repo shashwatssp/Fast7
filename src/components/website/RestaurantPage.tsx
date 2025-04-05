@@ -2,8 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
-import { addDoc, collection, doc, getDoc, serverTimestamp } from "firebase/firestore"
+import { addDoc, collection, doc, getDoc, runTransaction, serverTimestamp } from "firebase/firestore"
 import "./RestaurantPage.css"
 import { db } from "../../firebase"
 
@@ -77,8 +76,6 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   const getSubdomainFromUrl = () => {
     return subdomain;
   }
-
-
 
   useEffect(() => {
 
@@ -222,13 +219,16 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       // Create a unique order ID
       const newOrderId = `ORD-${Date.now()}`
       
+      // Calculate order total
+      const orderTotal = calculateTotal()
+      
       // Create order object
       const orderData = {
         id: newOrderId,
         restaurantId: restaurant?.domainName,
         customer: customerInfo,
         items: cart,
-        total: calculateTotal(),
+        total: orderTotal,
         pending: true,
         createdAt: serverTimestamp(),
       }
@@ -238,6 +238,30 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       const docRef = await addDoc(ordersRef, orderData)
       
       console.log("Order added with ID: ", docRef.id)
+      
+      // Update restaurant's totalSalesDone
+      if (restaurant?.domainName) {
+        const domainPrefix = restaurant.domainName.split('.')[0]
+        const restaurantRef = doc(db, 'restaurants', domainPrefix)
+        
+        // Use a transaction to safely update the total sales
+        await runTransaction(db, async (transaction) => {
+          const restaurantDoc = await transaction.get(restaurantRef)
+          if (!restaurantDoc.exists()) {
+            throw new Error("Restaurant document does not exist!")
+          }
+          
+          // Get current totalSalesDone value (or default to 0 if it doesn't exist)
+          const currentTotal = restaurantDoc.data()?.restaurantInfo?.totalSalesDone || 0
+          
+          // Update with the new total
+          transaction.update(restaurantRef, {
+            "restaurantInfo.totalSalesDone": currentTotal + orderTotal
+          })
+        })
+        
+        console.log(`Updated restaurant's totalSalesDone by adding ${orderTotal}`)
+      }
       
       // Set order state for confirmation
       setOrderId(newOrderId)
@@ -251,10 +275,11 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         setOrderPlaced(false)
       }, 5000)
     } catch (error) {
-      console.error("Error adding order: ", error)
+      console.error("Error processing order: ", error)
       // Handle error - perhaps show a message to the user
     }
   }
+  
 
   const handleBackToCart = () => {
     setCheckoutStep("cart")
