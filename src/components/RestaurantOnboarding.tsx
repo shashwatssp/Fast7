@@ -125,10 +125,10 @@ const RestaurantOnboarding = () => {
                 <div className="success-popup-overlay">
                     <div className="success-popup">
                         <div className="success-icon">
-                            <svg viewBox="0 0 52 52" className="checkmark">
-                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-                            </svg>
+                            <div className="check-icon">✓</div>
+                            <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                            <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+
                         </div>
                         <h2>Congratulations!</h2>
                         <p>Your website is now live at:</p>
@@ -340,7 +340,7 @@ const RestaurantOnboarding = () => {
                         <div className="summary-card">
                             <div className="summary-section">
                                 <h3>Website Domain</h3>
-                                <p className="domain-preview">{domainName}.dash.app</p>
+                                <p className="domain-preview">dash69.netlify.app/{domainName}</p>
                             </div>
 
                             <div className="summary-section">
