@@ -442,7 +442,7 @@ const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({ onNext, onBack })
             </div>
 
             <div className="menu-content">
-                <div className="category-sidebar">
+                <div className="categories-list">
                     {categories.map(category => (
                         <div
                             key={category.id.toString()}

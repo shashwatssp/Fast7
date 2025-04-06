@@ -212,7 +212,7 @@ const RestaurantOnboarding = () => {
                         {domainAvailable !== null && (
                             <div className={`domain-status ${domainAvailable ? 'available' : 'unavailable'}`}>
                                 {domainAvailable
-                                    ? <><span className="status-icon">✓</span> Fast7.netlify.app/{domainName} is available!</>
+                                    ? <><span className="status-icon">✓</span> fast7.netlify.app/{domainName} is available!</>
                                     : <><span className="status-icon">✗</span> This domain is already taken. Please try another.</>
                                 }
                             </div>
@@ -340,7 +340,7 @@ const RestaurantOnboarding = () => {
                         <div className="summary-card">
                             <div className="summary-section">
                                 <h3>Website Domain</h3>
-                                <p className="domain-preview">Fast7.netlify.app/{domainName}</p>
+                                <p className="domain-preview">fast7.netlify.app/{domainName}</p>
                             </div>
 
                             <div className="summary-section">
