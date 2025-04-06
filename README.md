@@ -2,7 +2,7 @@
 
 **Launch Your Restaurant Online in 7 Minutes!**
 
-Fast7 is a React application designed to help restaurant owners create stunning websites for their businesses in under 10 minutes. With a clean UI and mobile-first design, Fast7 makes it easy to establish an online presence.
+Fast7 is a React application designed to help restaurant owners create stunning websites for their businesses in under 7 minutes. With a clean UI and mobile-first design, Fast7 makes it easy to establish an online presence.
 
 ---
 

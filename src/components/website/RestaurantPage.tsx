@@ -301,10 +301,12 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       <div className="restaurant-error">
         <h2>Something went wrong</h2>
         <p>{error}</p>
-        <button onClick={() => window.location.reload()}>Try Again</button>
+        <button onClick={() => window.location.href = "/"}>Try Again</button>
       </div>
     )
   }
+
+
 
   if (!restaurant) {
 

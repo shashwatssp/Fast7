@@ -38,7 +38,6 @@ body {
 
 /* Dashboard container */
 .dashboard-container {
-  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
@@ -654,3 +653,105 @@ html {
 }
 
   
+/* Error container styling */
+.error-container {
+  max-width: 500px;
+  margin: 5rem auto;
+  padding: 2.5rem;
+  text-align: center;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: fadeIn 0.5s ease-out;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.error-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.07);
+}
+
+.error-container h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ff5a60;
+  margin-bottom: 1rem;
+  position: relative;
+  display: inline-block;
+}
+
+.error-container h2:after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff5a60 0%, #ff3868 100%);
+  border-radius: 3px;
+}
+
+.error-container p {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+.error-container button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #ff5a60 0%, #ff3868 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.85rem 1.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.error-container button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 14px rgba(255, 90, 96, 0.3);
+}
+
+.error-container button::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.error-container button:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add this to ensure the error container is properly centered on laptop screens */
+@media (min-width: 1024px) {
+  .error-container {
+    max-width: 550px;
+    margin: 7rem auto;
+  }
+}

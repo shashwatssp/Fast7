@@ -10,14 +10,15 @@
 }
 
   
-  .menu-loading {
+.menu-loading {
     width: 400px;
     max-width: 100%; /* makes it responsive on smaller screens */
     background-color: #f9f9f9; /* optional, just for visibility */
     padding: 20px;
     border-radius: 8px;
+    margin-left: -5%;
     text-align: center;
-  }
+}
 
 .menu-step-title {
   font-size: 2rem;

@@ -60,7 +60,7 @@ const HomePage = () => {
                                 Launch Your Restaurant Online in 7 Minutes
                             </h2>
                             <p className="hero-subtitle">
-                                Create a stunning website for your restaurant in under 10 minutes and start taking orders today. No coding required.
+                                Create a stunning website for your restaurant in under 7 minutes and start taking orders today. No coding required.
                             </p>
                             <button
                                 className="primary-button"

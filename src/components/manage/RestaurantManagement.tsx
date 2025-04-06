@@ -166,7 +166,7 @@ const RestaurantManagement = () => {
             <div className="error-container">
                 <h2>Error</h2>
                 <p>{error}</p>
-                <button onClick={() => window.location.href = "/create"}>Create a Restaurant</button>
+                <button onClick={() => window.location.reload()}>Try Again</button>
             </div>
         );
     }
