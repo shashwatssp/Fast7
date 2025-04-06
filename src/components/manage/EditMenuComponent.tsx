@@ -379,7 +379,7 @@ const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) =>
             <div className="menu-step-container">
                 <div className="menu-loading">
                     <div className="loading-spinner"></div>
-                    <p>Loading menu options...</p>
+                    <p>Loading...</p>
                 </div>
             </div>
         );

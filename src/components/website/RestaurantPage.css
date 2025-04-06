@@ -131,7 +131,7 @@ margin: 0 auto;
 
 .restaurant-header {
   position: relative;
-  background-color: #2a2a2a; /* Dark fallback */
+  background-color: #e6e4e4; /* Dark fallback */
   color: var(--white);
   padding: 4rem 1rem;
   text-align: center;
@@ -145,7 +145,6 @@ margin: 0 auto;
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80');
   background-size: cover;
   background-position: center;
   opacity: 0.7;
@@ -157,21 +156,43 @@ margin: 0 auto;
   position: relative;
   max-width: 1400px;
   margin: 0 auto;
-  z-index: 1;
+  z-index: 100;
+}
+
+.restaurant-header {
+  position: relative;
+  z-index: 10;
 }
 
 .restaurant-header h1 {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 1000;
   margin-bottom: 1rem;
   letter-spacing: -0.025em;
+  color: var(--white);
+  background-color: rgba(203, 32, 45, 0.9); /* var(--primary-dark) */
+  border: 2px solid var(--secondary-color); /* Gold border */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Slightly stronger shadow */
+  display: inline-block; /* To make background wrap just the text */
+  padding: 0.75rem 1.5rem; /* Slightly more padding for better spacing */
+  border-radius: var(--radius); /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Add subtle drop shadow */
+  transform: translateY(-5px); /* Slight lift effect */
+  transition: var(--transition); /* Smooth transition for hover effects */
 }
+
+.restaurant-header h1:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
 
 .header-divider {
   width: 6rem;
   height: 0.25rem;
   background-color: var(--primary-light);
   margin: 0 auto 1.5rem;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
 .restaurant-bio {
@@ -179,17 +200,20 @@ margin: 0 auto;
   margin: 0 auto 2rem;
   font-size: 1.125rem;
   line-height: 1.7;
-  opacity: 0.9;
+  color: #ffffff;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .restaurant-contact {
   display: inline-flex;
   gap: 1rem;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.6);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius);
   font-size: 0.875rem;
+  color: #ffffff;
 }
+
 
 /* Main Content */
 .restaurant-main {
@@ -313,8 +337,8 @@ margin: 0 auto;
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: #f12234;
-    border-radius: 3px;
+    background-color: #32a4d4;
+    border-radius: 6px;
   }
 }
 

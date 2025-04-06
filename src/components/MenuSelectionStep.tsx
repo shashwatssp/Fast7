@@ -409,7 +409,7 @@ const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({ onNext, onBack })
                 <div className="menu-loading">
                     <div style={{ height: '20rem' }}></div>
                     <div className="loading-spinner"></div>
-                    <p>Loading menu options...</p>
+                    <p>Loading...</p>
                     <div style={{ height: '200rem' }}></div>
                 </div>
             </div>

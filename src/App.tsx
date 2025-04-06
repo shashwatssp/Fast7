@@ -42,13 +42,13 @@ function App() {
             <div className="menu-loading">
             <div style={{ height: '20rem' }}></div>
                 <div className="loading-spinner"></div>
-                <p>Loading menu options...</p>
+                <p>Loading...</p>
                 <div style={{ height: '200rem' }}></div>
             </div>
         </div>
     );
 }
-  const isSubdomain = subdomain !== "fast7" && subdomain !== "www"; // Avoid root domain or common subdomains
+  const isSubdomain = subdomain !== "fast7" && subdomain !== "www" && subdomain!="manage"; // Avoid root domain or common subdomains
 
   console.log("Detected subdomain:", subdomain);
 
@@ -67,6 +67,7 @@ function App() {
 
     <Router>
       <Routes>
+      <Route path="/manage" element={user ?  <RestaurantManagement /> :<RestaurantManagement />} />
         {isSubdomain && subdomain!="localhost" && subdomain!="192" && subdomain!="Fast7" ? (
           <Route
             path="/*"
@@ -74,7 +75,7 @@ function App() {
           />
         ) : (
           <>
-            <Route path="/manage" element={user ?  <RestaurantManagement /> :<HomePage />} />
+            
             <Route path="/" element={ <HomePage />} />
             <Route path="/onboarding" element={user ? <RestaurantOnboarding /> : <Navigate to="/" />} />
             <Route path="/home" element={user ? <HomePage /> : <Navigate to="/" />} />

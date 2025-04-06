@@ -326,10 +326,12 @@ const RestaurantOnboarding = () => {
                 )}
 
                 {step === 3 && (
+                     <div className="onboarding-container-custom">
                     <MenuSelectionStep
                         onNext={handleMenuNext}
                         onBack={() => setStep(2)}
                     />
+                    </div>
                 )}
 
                 {step === 4 && (

@@ -323,19 +323,31 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     ...(restaurant.menuSelections?.customCategories || []),
   ]
 
+
+
   return (
     <div className="restaurant-page">
-      <header className="restaurant-header">
-        <div className="header-content">
-          <h1>{restaurant.restaurantInfo.name}</h1>
-          <div className="header-divider"></div>
-          <p className="restaurant-bio">{restaurant.restaurantInfo.bio}</p>
-          <div className="restaurant-contact">
-            <span>📍 {restaurant.restaurantInfo.address}</span>
-            <span>📞 {restaurant.restaurantInfo.phone}</span>
-          </div>
-        </div>
-      </header>
+<header 
+  className="restaurant-header" 
+  style={{
+    position: 'relative',
+    backgroundImage: `url(${restaurant.coverPhoto || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80'})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    filter: 'brightness(0.7)',
+  }}
+>
+  <div className="header-content">
+  <h1>{restaurant.restaurantInfo.name}</h1>
+  <div className="header-divider"></div>
+  <p className="restaurant-bio">{restaurant.restaurantInfo.bio}</p>
+  <div className="restaurant-contact">
+    <span>📍 {restaurant.restaurantInfo.address}</span>
+    <span>📞 {restaurant.restaurantInfo.phone}</span>
+  </div>
+  </div>
+</header>
+
 
       <main className="restaurant-main">
         <div className="search-filter-container">

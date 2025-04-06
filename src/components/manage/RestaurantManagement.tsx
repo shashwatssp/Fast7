@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './RestaurantManagement.css';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -18,11 +18,23 @@ const RestaurantManagement = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showMenuSelection, setShowMenuSelection] = useState(false);
     const [showEditMenu, setShowEditMenu] = useState(false);
+    const [showCoverPhotoForm, setShowCoverPhotoForm] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [coverPhoto, setCoverPhoto] = useState("");
+    const fileInputRef = useRef(null);
     const navigate = useNavigate();
+
+    const defaultCoverPhoto = "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80";
 
     const handleEditMenuClick = () => {
         setShowMenuSelection(true);
     };
+
+    const handleEditCoverPhotoClick = () => {
+        setShowCoverPhotoForm(true);
+        setCoverPhoto(restaurantData?.coverPhoto || "");
+    };
+
     const fetchRestaurantData = async () => {
         if (!currentUser) {
             setLoading(false);
@@ -60,19 +72,68 @@ const RestaurantManagement = () => {
     };
 
     useEffect(() => {
-
-
         fetchRestaurantData();
     }, [currentUser]);
 
     const handleEditMenuClose = (updatedMenu) => {
         // Simply set showMenuSelection to false to hide the EditMenuComponent
         setShowMenuSelection(false);
-        
+
         // If menu was updated (not just canceled), refresh data
         if (updatedMenu) {
             // Refresh restaurant data or update the local state
             fetchRestaurantData();
+        }
+    };
+
+    const handleImageUpload = async (file) => {
+        if (!file) return;
+
+        setUploading(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'menu_items');
+
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/dvm6d9t35/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${data.error?.message || 'Unknown error'}`);
+            }
+
+            if (data.secure_url) {
+                setCoverPhoto(data.secure_url);
+            }
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleSaveCoverPhoto = async () => {
+        try {
+            await updateDoc(doc(db, 'restaurants', restaurantData.id), { coverPhoto });
+            setShowCoverPhotoForm(false);
+
+            // Update local state to reflect the change
+            setRestaurantData(prev => ({
+                ...prev,
+                coverPhoto
+            }));
+        } catch (err) {
+            console.error("Error updating cover photo:", err);
+            alert("Failed to update cover photo. Please try again.");
         }
     };
 
@@ -100,7 +161,6 @@ const RestaurantManagement = () => {
             console.error("Error fetching orders:", err);
         }
     };
-
 
     const handleBack = () => {
         setShowMenuSelection(false); // Come back to current page
@@ -135,7 +195,7 @@ const RestaurantManagement = () => {
             }
 
             // Update the first matching document
-            const orderDoc = querySnapshot.docs[0];
+            const orderDoc = querySnapshot.docs;
             await updateDoc(orderDoc.ref, { pending: false });
 
             console.log("Order status updated successfully");
@@ -151,7 +211,6 @@ const RestaurantManagement = () => {
 
     // If loading, show a loading spinner
     if (loading) {
-
         return (
             <div className="restaurant-loading">
                 <div className="loading-spinner"></div>
@@ -184,7 +243,7 @@ const RestaurantManagement = () => {
 
     if (showMenuSelection) {
         return (
-            <EditMenuComponent 
+            <EditMenuComponent
                 existingMenuSelections={restaurantData.menuSelections}
                 restaurantId={restaurantData.id}
                 onClose={handleEditMenuClose}
@@ -307,7 +366,7 @@ const RestaurantManagement = () => {
                         </div>
                     </div>
 
-                    {/* Order Details Modal */}
+                                        {/* Order Details Modal */}
                     {selectedOrder && (
                         <div className="order-modal">
                             <div className="order-modal-content">
@@ -328,7 +387,7 @@ const RestaurantManagement = () => {
 
                     {/* Action Cards */}
                     <div className="action-cards">
-                        {/* Edit Menu Card */}
+                        {/* Manage Website Card */}
                         <div className="feature-card menu-card">
                             <div className="card-header">
                                 <div className="card-icon">
@@ -338,7 +397,7 @@ const RestaurantManagement = () => {
                                     </svg>
                                 </div>
                                 <div className="card-title-container">
-                                    <h2 className="card-title">Menu Management</h2>
+                                    <h2 className="card-title">Manage Website</h2>
                                     <p className="card-description">Update your menu items and categories</p>
                                 </div>
                             </div>
@@ -359,6 +418,14 @@ const RestaurantManagement = () => {
                                         Edit Menu
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </a>
+                                    <a href="#" className="action-button" onClick={handleEditCoverPhotoClick}>
+                                        Edit Cover Photo
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
                                         </svg>
                                     </a>
                                 </div>
@@ -439,6 +506,71 @@ const RestaurantManagement = () => {
                         </div>
                     )}
 
+                    {/* Cover Photo Modal */}
+                    {showCoverPhotoForm && (
+                        <div className="custom-form-overlay">
+                            <div className="custom-item-form">
+                                <div className="form-header">
+                                    <h3>Edit Cover Photo</h3>
+                                    <button
+                                        className="close-form-btn"
+                                        onClick={() => setShowCoverPhotoForm(false)}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="form-body">
+                                    <div className="form-group">
+                                        <label htmlFor="coverPhoto">Cover Photo</label>
+                                        <div className="custom-image-upload">
+                                            <img
+                                                src={coverPhoto || defaultCoverPhoto}
+                                                alt="Cover Photo"
+                                                className={`custom-image-preview ${uploading ? 'uploading' : ''}`}
+                                            />
+                                            <div
+                                                className="custom-image-upload-icon"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                <span>📷</span>
+                                                {uploading && <span className="upload-spinner-small"></span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-actions">
+                                    <button
+                                        type="button"
+                                        className="cancel-btn"
+                                        onClick={() => setShowCoverPhotoForm(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="add-item-btn"
+                                        onClick={handleSaveCoverPhoto}
+                                    >
+                                        Save Cover Photo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                                handleImageUpload(e.target.files[0]);
+                            }
+                        }}
+                    />
 
                 </main>
             </div>
@@ -447,4 +579,3 @@ const RestaurantManagement = () => {
 };
 
 export default RestaurantManagement;
-
