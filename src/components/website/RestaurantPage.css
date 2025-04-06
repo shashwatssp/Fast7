@@ -75,7 +75,7 @@
   animation: spin 1s linear infinite; 
   margin-bottom: 1rem; 
   display: flex;
-  margin: 0 auto; /* This centers the spinner horizontally */
+  margin: 0 auto; 
 }
   
   @keyframes spin {
@@ -120,10 +120,9 @@
     background-color: var(--primary-dark);
   }
   
-  /* Restaurant Header */
   .restaurant-header {
     position: relative;
-    background-color: #f83b3b; /* amber-900 */
+    background-color: #2a2a2a; /* Dark fallback */
     color: var(--white);
     padding: 4rem 1rem;
     text-align: center;
@@ -137,10 +136,13 @@
     left: 0;
     right: 0;
     bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80');
     background-size: cover;
     background-position: center;
-    opacity: 0.3;
+    opacity: 0.7;
+    filter: brightness(0.7);
   }
+  
   
   .header-content {
     position: relative;

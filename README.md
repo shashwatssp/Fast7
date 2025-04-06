@@ -1,4 +1,4 @@
-# Fast7 ⚡
+# Fast7⚡
 
 **Launch Your Restaurant Online in 7 Minutes!**
 

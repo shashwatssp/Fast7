@@ -110,7 +110,7 @@ const RestaurantOnboarding = () => {
             console.log("Website created successfully with data:", restaurantData);
 
             // Set website URL and show success popup
-            setNewWebsiteUrl(`https://Fast7.netlify.app/${domainName}`);
+            setNewWebsiteUrl(`https://fast7.netlify.app/${domainName}`);
             setShowSuccessPopup(true);
 
         } catch (error) {

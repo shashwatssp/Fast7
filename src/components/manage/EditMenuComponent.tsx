@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // import './EditMenuComponent.css';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
+const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [categories, setCategories] = useState([]);
@@ -15,10 +15,17 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
     const [customItem, setCustomItem] = useState({
         categoryName: '',
         itemName: '',
-        price: ''
+        price: '',
+        description: '',
+        image: ''
     });
     const [searchTerm, setSearchTerm] = useState('');
     const [activeCategory, setActiveCategory] = useState(null);
+    
+    // Image upload states
+    const [uploading, setUploading] = useState(false);
+    const [uploadingItemId, setUploadingItemId] = useState(null);
+    const fileInputRef = useRef(null);
 
     // Load existing menu data and database items
     useEffect(() => {
@@ -32,11 +39,8 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                     id: parseInt(doc.id)
                 }));
 
-                console.log("categories", categories)
-
                 // Fetch all menu items from Firebase
                 const itemsSnapshot = await getDocs(collection(db, 'menuItems'));
-                console.log("items", itemsSnapshot)
                 const fetchedItems = itemsSnapshot.docs.map(doc => ({
                     ...doc.data(),
                     id: parseInt(doc.id)
@@ -71,7 +75,8 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                                 groupedItems[categoryId][item.id] = {
                                     ...groupedItems[categoryId][item.id],
                                     selected: true,
-                                    price: item.price.toString()
+                                    price: item.price.toString(),
+                                    image: item.image || groupedItems[categoryId][item.id].image
                                 };
                             }
                         });
@@ -98,6 +103,79 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
 
         fetchData();
     }, [existingMenuSelections]);
+
+    // Handle image upload
+    const handleImageUpload = async (categoryId, itemId, file) => {
+        if (!file) {
+            console.warn('No file selected');
+            return;
+        }
+
+        setUploading(true);
+        setUploadingItemId(`${categoryId}-${itemId}`);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'menu_items');
+            
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/dvm6d9t35/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${data.error?.message || 'Unknown error'}`);
+            }
+
+            if (data.secure_url) {
+                // If it's an existing custom item
+                if (typeof categoryId === 'string' && categoryId.startsWith('custom_')) {
+                    setCustomItems(prev => ({
+                        ...prev,
+                        [categoryId]: {
+                            ...prev[categoryId],
+                            [itemId]: {
+                                ...prev[categoryId][itemId],
+                                image: data.secure_url
+                            }
+                        }
+                    }));
+                }
+                // If it's a new custom item being created
+                else if (categoryId === 'custom-new' && itemId === 'new') {
+                    setCustomItem(prev => ({
+                        ...prev,
+                        image: data.secure_url
+                    }));
+                }
+                // Regular menu items
+                else {
+                    setSelectedItems(prev => ({
+                        ...prev,
+                        [categoryId]: {
+                            ...prev[categoryId],
+                            [itemId]: {
+                                ...prev[categoryId][itemId],
+                                image: data.secure_url
+                            }
+                        }
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('Error in upload process:', error);
+            alert('Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+            setUploadingItemId(null);
+        }
+    };
 
     // Toggle selection of an item
     const handleItemSelection = (categoryId, itemId) => {
@@ -138,7 +216,7 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
 
     // Add a new custom item
     const addCustomItem = () => {
-        const { categoryName, itemName, price } = customItem;
+        const { categoryName, itemName, price, description, image } = customItem;
 
         if (!categoryName.trim() || !itemName.trim() || !price.trim()) {
             alert("Please fill all fields");
@@ -175,8 +253,10 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                 [itemId]: {
                     name: itemName,
                     price,
+                    description: description || '',
                     selected: true,
-                    isCustom: true
+                    isCustom: true,
+                    image: image || ''
                 }
             }
         }));
@@ -185,7 +265,9 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
         setCustomItem({
             categoryName: '',
             itemName: '',
-            price: ''
+            price: '',
+            description: '',
+            image: ''
         });
 
         setShowCustomForm(false);
@@ -243,12 +325,6 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                 customItems: {}
             };
 
-
-
-            console.log(menuSelections)
-
-            console.log("restaurantId:", restaurantId);
-
             // Process standard items
             categories.forEach(category => {
                 const categoryItems = selectedItems[category.id];
@@ -277,7 +353,9 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                 menuSelections.customItems[categoryId] = Object.entries(items).map(([itemId, item]) => ({
                     id: itemId,
                     name: item.name,
-                    price: parseFloat(item.price)
+                    price: parseFloat(item.price),
+                    description: item.description || '',
+                    image: item.image || ''
                 }));
             });
 
@@ -400,14 +478,32 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                                     className={`menu-item-card ${item.selected ? 'selected' : ''}`}
                                     onClick={() => handleItemSelection(activeCategory, itemId)}
                                 >
-                                    <img
-                                        src={item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300&h=200'}
-                                        alt={item.name}
-                                        className="menu-item-image"
-                                        onError={(e) => {
-                                            e.currentTarget.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300&h=200';
-                                        }}
-                                    />
+                                    <div className="menu-item-image-container">
+                                        <img
+                                            src={item.image || 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image'}
+                                            alt={item.name}
+                                            className={`menu-item-image ${uploadingItemId === `${activeCategory}-${itemId}` ? 'uploading' : ''}`}
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image';
+                                            }}
+                                        />
+                                        <div
+                                            className="image-upload-icon"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (fileInputRef.current) {
+                                                    fileInputRef.current.dataset.categoryId = activeCategory?.toString() || '';
+                                                    fileInputRef.current.dataset.itemId = itemId;
+                                                    fileInputRef.current.click();
+                                                }
+                                            }}
+                                        >
+                                            <span>{item.image ? '🔄' : '📷'}</span>
+                                            {uploadingItemId === `${activeCategory}-${itemId}` && (
+                                                <span className="upload-spinner-small"></span>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="menu-item-content">
                                         <div className="menu-item-header">
                                             <h4 className="menu-item-name">{item.name}</h4>
@@ -442,16 +538,45 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                         </div>
                     )}
 
-                    {activeCategory && customItems[activeCategory] && (
+{activeCategory && customItems[activeCategory] && (
                         <div className="menu-items-grid">
                             {Object.entries(customItems[activeCategory]).map(([itemId, item]) => (
                                 <div key={itemId} className="menu-item-card custom selected">
+                                    <div className="menu-item-image-container">
+                                        <img
+                                            src={item.image || 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image'}
+                                            alt={item.name}
+                                            className={`menu-item-image ${uploadingItemId === `${activeCategory}-${itemId}` ? 'uploading' : ''}`}
+                                            onError={(e) => {
+                                                e.currentTarget.src = 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image';
+                                            }}
+                                        />
+                                        <div
+                                            className="image-upload-icon"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (fileInputRef.current) {
+                                                    fileInputRef.current.dataset.categoryId = activeCategory;
+                                                    fileInputRef.current.dataset.itemId = itemId;
+                                                    fileInputRef.current.click();
+                                                }
+                                            }}
+                                        >
+                                            <span>{item.image ? '🔄' : '📷'}</span>
+                                            {uploadingItemId === `${activeCategory}-${itemId}` && (
+                                                <span className="upload-spinner-small"></span>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="menu-item-content">
                                         <div className="menu-item-header">
                                             <h4 className="menu-item-name">{item.name}</h4>
                                             <div className="custom-price">₹{item.price}</div>
                                         </div>
                                         <div className="custom-item-badge">Custom Item</div>
+                                        {item.description && (
+                                            <p className="menu-item-description">{item.description}</p>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -483,6 +608,36 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                         </div>
 
                         <div className="form-body">
+                            <div className="form-group">
+                                <label htmlFor="itemImage">Item Image</label>
+                                <div className="custom-image-upload">
+                                    <img
+                                        src={customItem.image || 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image'}
+                                        alt="Preview"
+                                        className={`custom-image-preview ${uploading && uploadingItemId === 'custom-new-new' ? 'uploading' : ''}`}
+                                        onError={(e) => {
+                                            e.currentTarget.src = 'https://via.placeholder.com/300x200/f0f0f0/cccccc?text=Add+Image';
+                                        }}
+                                    />
+                                    <div
+                                        className="custom-image-upload-icon"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            if (fileInputRef.current) {
+                                                fileInputRef.current.dataset.categoryId = 'custom-new';
+                                                fileInputRef.current.dataset.itemId = 'new';
+                                                fileInputRef.current.click();
+                                            }
+                                        }}
+                                    >
+                                        <span>{customItem.image ? '🔄' : '📷'}</span>
+                                        {uploading && uploadingItemId === 'custom-new-new' && (
+                                            <span className="upload-spinner-small"></span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="form-group">
                                 <label htmlFor="categoryName">Category Name</label>
                                 <input
@@ -529,14 +684,24 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                                     required
                                 />
                             </div>
+
+                            <div className="form-group">
+                                <label htmlFor="description">Description (Optional)</label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    value={customItem.description || ''}
+                                    onChange={handleCustomItemChange}
+                                    placeholder="e.g., Our signature dish made with secret spices"
+                                />
+                            </div>
                         </div>
 
                         <div className="form-actions">
                             <button
                                 type="button"
                                 className="cancel-btn"
-                                onClick={saveMenuChanges}
-                                
+                                onClick={() => setShowCustomForm(false)}
                             >
                                 Cancel
                             </button>
@@ -565,10 +730,27 @@ const EditMenuComponent = ({restaurantId,existingMenuSelections, onClose }) => {
                     Done
                 </button>
             </div>
+
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*"
+                onChange={(e) => {
+                    if (!e.target.files?.length) return;
+
+                    const categoryId = e.target.dataset.categoryId || '';
+                    const itemId = e.target.dataset.itemId || '';
+
+                    if (categoryId && itemId && e.target.files[0]) {
+                        handleImageUpload(categoryId, itemId, e.target.files[0]);
+                    }
+
+                    e.target.value = '';
+                }}
+            />
         </div>
-    )
-}
+    );
+};
 
 export default EditMenuComponent;
-
-

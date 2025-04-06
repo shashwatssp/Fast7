@@ -36,7 +36,18 @@ function App() {
   const subdomain = hostname.split('.')[0]; // Extract 'foods' or the first part of the hostname
 
 
-
+  if (loading) {
+    return (
+        <div className="menu-step-container">
+            <div className="menu-loading">
+            <div style={{ height: '20rem' }}></div>
+                <div className="loading-spinner"></div>
+                <p>Loading menu options...</p>
+                <div style={{ height: '200rem' }}></div>
+            </div>
+        </div>
+    );
+}
   const isSubdomain = subdomain !== "fast7" && subdomain !== "www"; // Avoid root domain or common subdomains
 
   console.log("Detected subdomain:", subdomain);

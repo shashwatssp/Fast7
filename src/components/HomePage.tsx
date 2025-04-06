@@ -49,7 +49,7 @@ const HomePage = () => {
                     {/* Header Section */}
                     <header className="header">
                         <h1 className="logo">
-                            Fast7 <span className="lightning">⚡</span>
+                            Fast7<span className="lightning">⚡</span>
                         </h1>
                     </header>
 

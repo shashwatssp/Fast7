@@ -109,9 +109,40 @@
   background: #f8f9fa;
   padding: 0.5rem;
   border-right: 1px solid #e9ecef;
-  height: 600px;
+  height: 400px; /* Reduced from 600px */
   overflow-y: auto;
+  
+  /* Make scrollbar more visible */
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #FF5A60 #f8f9fa; /* For Firefox */
 }
+
+/* Custom scrollbar styling for Chrome, Edge, Safari */
+.category-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.category-sidebar::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.category-sidebar::-webkit-scrollbar-thumb {
+  background-color: #FF5A60;
+  border-radius: 10px;
+  border: 2px solid #f8f9fa;
+}
+
+/* Add a visual indicator that content is scrollable */
+.category-sidebar::after {
+  content: "";
+  display: block;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, #f8f9fa);
+  position: sticky;
+  bottom: 0;
+  pointer-events: none;
+}
+
 
 .category-tab {
   display: flex;
@@ -454,4 +485,172 @@
   .menu-items-grid {
     grid-template-columns: 1fr;
   }
+
+
+  
 }
+
+/* Image upload container and styling */
+.menu-item-image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.menu-item-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.menu-item-image.uploading {
+  opacity: 0.6;
+}
+
+.image-upload-icon {
+  position: absolute;
+  opacity: 0.8;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 200;
+}
+
+
+.menu-item-image-container:hover .image-upload-icon {
+  opacity: 1;
+}
+
+.menu-item-image-container:hover .image-upload-icon {
+  opacity: 1;
+}
+
+/* Small spinner for individual uploads */
+.upload-spinner-small {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  position: absolute;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.custom-image-upload {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.custom-image-preview {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.custom-image-preview.uploading {
+  opacity: 0.6;
+}
+
+.custom-image-upload-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.custom-image-upload:hover .custom-image-upload-icon {
+  opacity: 1;
+}
+
+/* Improved Badge Styles */
+.custom-badge, .custom-header-badge, .custom-item-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  color: #6c757d;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+/* Category badge in sidebar */
+.custom-badge {
+  font-size: 0.65rem;
+  background-color: #e9f5fe;
+  color: #3498db;
+  border-color: #bde0fd;
+}
+
+/* Header badge */
+.custom-header-badge {
+  background-color: #e9f5fe;
+  color: #3498db;
+  border-color: #bde0fd;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+/* Item badge */
+.custom-item-badge {
+  margin-top: 0.5rem;
+  background-color: #e9f5fe;
+  color: #3498db;
+  border-color: #bde0fd;
+  font-size: 0.65rem;
+  align-self: flex-start;
+}
+
+/* Hover effects */
+.custom-badge:hover,
+.custom-header-badge:hover,
+.custom-item-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+/* Active category with badge */
+.category-tab.active .custom-badge {
+  background-color: #d6eeff;
+  border-color: #a8d4f5;
+}
+
+
