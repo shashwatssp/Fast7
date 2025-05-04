@@ -9,11 +9,15 @@
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 100%;
   overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
   color: #333;
   line-height: 1.6;
 }
+
 
 html {
   scroll-behavior: smooth;
@@ -43,10 +47,10 @@ html {
 
 /* Container styles */
 .container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 1.2rem;
-  width: 99%;
+  width: 100%;
 }
 
 /* Lightning animation */
@@ -258,31 +262,26 @@ html {
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
+  max-width: 100%;
 }
 
-/* Desktop optimizations */
 @media (min-width: 1024px) {
+  .animated-bg {
+    padding: 2rem;
+  }
+  
   .container {
-    max-width: 1200px;
+    max-width: 1600px;
+    width: 100%;
   }
   
   .hero-card {
     padding: 3rem;
+    width: 100%;
     max-width: 900px;
   }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.25rem;
-  }
-  
-  .features-title {
-    font-size: 2rem;
-  }
 }
+
 
 /* Mobile optimizations - keep as is */
 @media (max-width: 768px) {

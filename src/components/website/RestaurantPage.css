@@ -96,6 +96,14 @@ margin: 0 auto;
   }
 }
 
+#root {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center;
+}
+
 /* Error State */
 .restaurant-error {
   display: flex;

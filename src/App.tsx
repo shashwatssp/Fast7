@@ -38,14 +38,13 @@ function App() {
 
   if (loading) {
     return (
-        <div className="menu-step-container">
-            <div className="menu-loading">
+       
+            <div>
             <div style={{ height: '20rem' }}></div>
                 <div className="loading-spinner"></div>
                 <p>Loading...</p>
                 <div style={{ height: '200rem' }}></div>
             </div>
-        </div>
     );
 }
   const isSubdomain = subdomain !== "fast7" && subdomain !== "www" && subdomain!="manage"; // Avoid root domain or common subdomains

@@ -505,7 +505,7 @@ input:checked + .toggle-slider:before {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1600px) {
   .animated-bg {
     padding: 0.75rem;
   }
@@ -751,7 +751,14 @@ html {
 /* Add this to ensure the error container is properly centered on laptop screens */
 @media (min-width: 1024px) {
   .error-container {
-    max-width: 550px;
+    max-width: 1650px;
     margin: 7rem auto;
   }
+}
+#root {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center;
 }

@@ -376,11 +376,11 @@ const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) =>
 
     if (loading) {
         return (
-            <div className="menu-step-container">
-                <div className="menu-loading">
-                    <div className="loading-spinner"></div>
-                    <p>Loading...</p>
-                </div>
+            <div>
+            <div style={{ height: '20rem' }}></div>
+                <div className="loading-spinner"></div>
+                <p>Loading...</p>
+                <div style={{ height: '200rem' }}></div>
             </div>
         );
     }
