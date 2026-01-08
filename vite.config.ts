@@ -7,5 +7,6 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // This allows connections from any device on your network
     port: 5173, // Default Vite port, change if needed
+    cors: true, // Enable CORS for local network access
   },
 })

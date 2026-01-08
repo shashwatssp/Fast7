@@ -30,3 +30,36 @@ Fast7 is a SaaS Restaurant Website Builder designed to help restaurant owners cr
 
 ---
 
+## Running on Local Network (Mobile Access)
+
+The development server is configured to be accessible from mobile devices on your local WiFi network.
+
+### Setup Instructions
+
+1. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+2. **Find your local IP address:**
+   - **Windows**: Open Command Prompt and run `ipconfig`. Look for "IPv4 Address" under your active network adapter.
+   - **Mac/Linux**: Open Terminal and run `ifconfig` or `ip addr show`. Look for your WiFi adapter's IP address (usually starts with 192.168.x.x or 10.0.x.x).
+
+3. **Access from mobile device:**
+   - Make sure your mobile device is connected to the same WiFi network as your computer.
+   - Open a browser on your mobile device and navigate to:
+     ```
+     http://YOUR_LOCAL_IP:5173
+     ```
+     For example: `http://192.168.1.100:5173`
+
+4. **Troubleshooting:**
+   - If you can't access the server, check your firewall settings to ensure port 5173 is allowed.
+   - Verify both devices are on the same network.
+   - Try accessing from your computer using `http://localhost:5173` first to ensure the server is running.
+
+### Network Configuration
+
+The Vite server is configured to bind to `0.0.0.0`, which allows connections from any device on your local network. This is set in `vite.config.ts`.
+
+---

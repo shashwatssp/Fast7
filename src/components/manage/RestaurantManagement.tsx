@@ -5,6 +5,7 @@ import { db } from '../../firebase';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import EditMenuComponent from './EditMenuComponent';
+import OrderMap from './OrderMap';
 
 const RestaurantManagement = () => {
     const [isOrderingEnabled, setIsOrderingEnabled] = useState(false);
@@ -21,6 +22,8 @@ const RestaurantManagement = () => {
     const [showCoverPhotoForm, setShowCoverPhotoForm] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [coverPhoto, setCoverPhoto] = useState("");
+    const [showOrderMap, setShowOrderMap] = useState(false);
+    const [selectedOrderForMap, setSelectedOrderForMap] = useState(null);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
@@ -345,7 +348,21 @@ const RestaurantManagement = () => {
                         <div className="orders-list">
                             {pendingOrders.map((order) => (
                                 <div key={order.id} className="order-item">
-                                    <span onClick={() => setSelectedOrder(order)}>Order #{order.id}</span>
+                                    <div className="order-item-left">
+                                        <span onClick={() => setSelectedOrder(order)}>Order #{order.id}</span>
+                                        {order.customer?.address && (
+                                            <button 
+                                                className="view-map-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedOrderForMap(order);
+                                                    setShowOrderMap(true);
+                                                }}
+                                            >
+                                                📍 View on Map
+                                            </button>
+                                        )}
+                                    </div>
                                     <button onClick={() => toggleOrderStatus(order.id)}>Mark as Fulfilled</button>
                                 </div>
                             ))}
@@ -358,8 +375,22 @@ const RestaurantManagement = () => {
                         <h2 className="card-title">Past Orders</h2>
                         <div className="orders-list">
                             {pastOrders.map((order) => (
-                                <div key={order.id} className="order-item" onClick={() => setSelectedOrder(order)}>
-                                    <span>Order #{order.id}</span>
+                                <div key={order.id} className="order-item">
+                                    <div className="order-item-left">
+                                        <span onClick={() => setSelectedOrder(order)}>Order #{order.id}</span>
+                                        {order.customer?.address && (
+                                            <button 
+                                                className="view-map-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedOrderForMap(order);
+                                                    setShowOrderMap(true);
+                                                }}
+                                            >
+                                                📍 View on Map
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                             {pastOrders.length === 0 && <p>No past orders</p>}
@@ -487,13 +518,29 @@ const RestaurantManagement = () => {
                     </div>
 
 
+                    {/* Order Map Modal */}
+                    {showOrderMap && selectedOrderForMap && (
+                        <OrderMap
+                            restaurantAddress={restaurantData?.restaurantInfo?.address || ''}
+                            deliveryAddress={selectedOrderForMap.customer?.address || ''}
+                            orderId={selectedOrderForMap.id}
+                            customerName={selectedOrderForMap.customer?.name || 'Customer'}
+                            deliveryCoordinates={selectedOrderForMap.customer?.coordinates}
+                            onClose={() => {
+                                setShowOrderMap(false);
+                                setSelectedOrderForMap(null);
+                            }}
+                        />
+                    )}
+
                     {/* Order Details Modal */}
-                    {selectedOrder && (
+                    {selectedOrder && !showOrderMap && (
                         <div className="order-modal">
                             <div className="order-modal-content">
                                 <h2>Order Details</h2>
                                 <p>Order ID: {selectedOrder.id}</p>
                                 <p>Customer: {selectedOrder.customer.name}</p>
+                                <p>Address: {selectedOrder.customer.address || 'N/A'}</p>
                                 <p>Total: ₹{selectedOrder.total}</p>
                                 <h3>Items:</h3>
                                 <ul>
@@ -501,6 +548,18 @@ const RestaurantManagement = () => {
                                         <li key={index}>{item.name}</li>
                                     ))}
                                 </ul>
+                                {selectedOrder.customer?.address && (
+                                    <button 
+                                        className="view-map-btn-modal"
+                                        onClick={() => {
+                                            setSelectedOrderForMap(selectedOrder);
+                                            setShowOrderMap(true);
+                                            setSelectedOrder(null);
+                                        }}
+                                    >
+                                        📍 View Delivery Route on Map
+                                    </button>
+                                )}
                                 <button onClick={() => setSelectedOrder(null)}>Close</button>
                             </div>
                         </div>

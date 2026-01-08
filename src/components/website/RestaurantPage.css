@@ -758,8 +758,61 @@ margin: 0 auto;
     font-size: 0.875rem;
   }
   
-  .form-group input,
-  .form-group textarea {
+.address-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.address-input-container textarea {
+  width: 100%;
+}
+
+.btn-select-location {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #ff5a60 0%, #ff3868 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+}
+
+.btn-select-location:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 90, 96, 0.3);
+}
+
+.address-validated {
+  background-color: #f0f9ff;
+  border-color: #28a745 !important;
+}
+
+.location-confirmed {
+  padding: 0.75rem;
+  background: #d4edda;
+  border: 1px solid #28a745;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.location-warning {
+  padding: 0.75rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
     padding: 0.75rem;
     border: 1px solid #e5e7eb; /* gray-200 */
     border-radius: var(--radius);

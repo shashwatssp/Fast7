@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { addDoc, collection, doc, getDoc, runTransaction, serverTimestamp } from "firebase/firestore"
 import "./RestaurantPage.css"
 import { db } from "../../firebase"
+import LocationPicker from "./LocationPicker"
+import { RoutePoint } from "../../utils/olaMapsService"
 
 
 interface MenuItem {
@@ -47,6 +49,7 @@ interface CustomerInfo {
   name: string
   contact: string
   address: string
+  coordinates?: RoutePoint
 }
 
 interface RestaurantPageProps {
@@ -72,6 +75,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   })
   const [orderPlaced, setOrderPlaced] = useState<boolean>(false)
   const [orderId, setOrderId] = useState<string>("")
+  const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false)
 
   const getSubdomainFromUrl = () => {
     return subdomain;
@@ -212,8 +216,30 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     setCheckoutStep("checkout")
   }
 
+  const handleLocationSelect = (address: string, coordinates: RoutePoint) => {
+    console.log('Location selected:', { address, coordinates });
+    setCustomerInfo(prev => ({
+      ...prev,
+      address,
+      coordinates,
+    }));
+    setShowLocationPicker(false);
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
+  
+    // Validate that location is selected
+    if (!customerInfo.coordinates) {
+      alert('Please select a location using the "Select Location" button to ensure accurate delivery address.');
+      setShowLocationPicker(true);
+      return;
+    }
+
+    if (!customerInfo.address || customerInfo.address.trim().length < 10) {
+      alert('Please enter a complete delivery address (at least 10 characters).');
+      return;
+    }
   
     try {
       // Create a unique order ID
@@ -222,16 +248,24 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       // Calculate order total
       const orderTotal = calculateTotal()
       
-      // Create order object
+      // Create order object with coordinates
       const orderData = {
         id: newOrderId,
         restaurantId: restaurant?.domainName,
-        customer: customerInfo,
+        customer: {
+          ...customerInfo,
+          coordinates: {
+            lat: customerInfo.coordinates.lat,
+            lng: customerInfo.coordinates.lng,
+          },
+        },
         items: cart,
         total: orderTotal,
         pending: true,
         createdAt: serverTimestamp(),
       }
+
+      console.log('Placing order with data:', orderData);
       
       // Add to Firestore
       const ordersRef = collection(db, "orders")
@@ -519,15 +553,37 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="address">Delivery Address</label>
-                        <textarea
-                          id="address"
-                          name="address"
-                          required
-                          rows={3}
-                          value={customerInfo.address}
-                          onChange={handleInputChange}
-                        />
+                        <label htmlFor="address">Delivery Address *</label>
+                        <div className="address-input-container">
+                          <textarea
+                            id="address"
+                            name="address"
+                            required
+                            rows={3}
+                            value={customerInfo.address}
+                            onChange={handleInputChange}
+                            placeholder="Enter complete address or click 'Select Location' to use map"
+                            readOnly={!!customerInfo.coordinates}
+                            className={customerInfo.coordinates ? "address-validated" : ""}
+                          />
+                          <button
+                            type="button"
+                            className="btn-select-location"
+                            onClick={() => setShowLocationPicker(true)}
+                          >
+                            📍 {customerInfo.coordinates ? "Change Location" : "Select Location"}
+                          </button>
+                        </div>
+                        {customerInfo.coordinates && (
+                          <div className="location-confirmed">
+                            ✓ Location confirmed: {customerInfo.coordinates.lat.toFixed(6)}, {customerInfo.coordinates.lng.toFixed(6)}
+                          </div>
+                        )}
+                        {!customerInfo.coordinates && customerInfo.address && (
+                          <div className="location-warning">
+                            ⚠️ Please click "Select Location" to validate your address and ensure accurate delivery
+                          </div>
+                        )}
                       </div>
 
                       <div className="order-summary">
@@ -551,6 +607,15 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Location Picker Modal */}
+      {showLocationPicker && (
+        <LocationPicker
+          onLocationSelect={handleLocationSelect}
+          initialAddress={customerInfo.address}
+          onClose={() => setShowLocationPicker(false)}
+        />
       )}
 
       {/* Footer */}

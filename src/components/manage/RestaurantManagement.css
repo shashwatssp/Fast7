@@ -379,6 +379,50 @@ input:checked + .toggle-slider:before {
   background-color: #f9f9f9;
 }
 
+.order-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.view-map-btn {
+  background: linear-gradient(135deg, #ff5a60 0%, #ff3868 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+}
+
+.view-map-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 90, 96, 0.3);
+}
+
+.view-map-btn-modal {
+  background: linear-gradient(135deg, #ff5a60 0%, #ff3868 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.view-map-btn-modal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 90, 96, 0.3);
+}
+
 .order-header {
   display: flex;
   align-items: center;
