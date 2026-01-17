@@ -1,6 +1,12 @@
 [build]
   publish = "dist"
   command = "npm run build"
+  # Disable Netlify analytics
+  environment = {
+    NODE_VERSION = "18",
+    NETLIFY_ANALYTICS_ID = "disabled",
+    NETLIFY_SITE_ID = "disabled"
+  }
 
 [functions]
   directory = "netlify/functions"
@@ -14,17 +20,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[build.environment]
-  NODE_VERSION = "18"
-
-# Disable Netlify's automatic error tracking and analytics
-[build]
-  # Disable Netlify analytics
-  environment = {
-    NETLIFY_ANALYTICS_ID = "disabled",
-    NETLIFY_SITE_ID = "disabled"
-  }
 
 # Security headers to block third-party tracking
 [[headers]]
