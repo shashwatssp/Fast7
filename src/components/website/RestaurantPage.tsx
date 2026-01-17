@@ -105,7 +105,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         const restaurantDoc = await getDoc(restaurantDocRef)
 
         if (!restaurantDoc.exists()) {
-          console.error("Restaurant document not found")
+          console.log("Restaurant document not found for domain:", restaurantDomain)
           setError("Restaurant not found")
           setLoading(false)
           return
