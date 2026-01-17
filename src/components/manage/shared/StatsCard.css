@@ -1,0 +1,183 @@
+.stats-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.stats-card-clickable {
+  cursor: pointer;
+}
+
+.stats-card-clickable:hover {
+  transform: translateY(-5px) scale(1.02);
+}
+
+.stats-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stats-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  color: #ff5a60;
+  background: linear-gradient(135deg, rgba(255, 90, 96, 0.2) 0%, rgba(255, 56, 104, 0.2) 100%);
+}
+
+.stats-card-secondary .stats-card-icon {
+  color: #3b82f6;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+}
+
+.stats-card-success .stats-card-icon {
+  color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+}
+
+.stats-card-warning .stats-card-icon {
+  color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%);
+}
+
+.stats-card-info .stats-card-icon {
+  color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+}
+
+.stats-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+}
+
+.trend-positive {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.trend-negative {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.stats-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stats-card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stats-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  line-height: 1;
+}
+
+.stats-card-subtitle {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .stats-card {
+    padding: 1.25rem;
+  }
+  
+  .stats-card-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .stats-card-value {
+    font-size: 1.75rem;
+  }
+  
+  .stats-card-title {
+    font-size: 0.8rem;
+  }
+}
+
+/* Animation for value changes */
+.stats-card-value {
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover .stats-card-value {
+  transform: scale(1.05);
+}
+
+/* Special gradient for primary cards */
+.stats-card-primary {
+  border: 1px solid rgba(255, 90, 96, 0.1);
+}
+
+.stats-card-primary:hover {
+  border-color: rgba(255, 90, 96, 0.3);
+}
+
+.stats-card-secondary {
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.stats-card-secondary:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.stats-card-success {
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.stats-card-success:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.stats-card-warning {
+  border: 1px solid rgba(245, 158, 11, 0.1);
+}
+
+.stats-card-warning:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.stats-card-info {
+  border: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.stats-card-info:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+}
