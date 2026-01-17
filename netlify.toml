@@ -17,3 +17,26 @@
 
 [build.environment]
   NODE_VERSION = "18"
+
+# Disable Netlify's automatic error tracking and analytics
+[build]
+  # Disable Netlify analytics
+  environment = {
+    NETLIFY_ANALYTICS_ID = "disabled",
+    NETLIFY_SITE_ID = "disabled"
+  }
+
+# Security headers to block third-party tracking
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+
+# Block Bugsnag and other tracking domains
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.cloudinary.com https://maps.googleapis.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
