@@ -1,12 +1,11 @@
 [build]
   publish = "dist"
   command = "npm run build"
-  # Disable Netlify analytics
-  environment = {
-    NODE_VERSION = "18",
-    NETLIFY_ANALYTICS_ID = "disabled",
-    NETLIFY_SITE_ID = "disabled"
-  }
+
+[build.environment]
+  NODE_VERSION = "18"
+  NETLIFY_ANALYTICS_ID = "disabled"
+  NETLIFY_SITE_ID = "disabled"
 
 [functions]
   directory = "netlify/functions"
