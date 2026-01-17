@@ -8,5 +8,13 @@ export default defineConfig({
     host: '0.0.0.0', // This allows connections from any device on your network
     port: 5173, // Default Vite port, change if needed
     cors: true, // Enable CORS for local network access
+    proxy: {
+      // Proxy Netlify Function calls to local server for development
+      '/.netlify/functions': {
+        target: 'http://localhost:8888',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })
