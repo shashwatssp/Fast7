@@ -45,11 +45,11 @@ class DeliveryTrackingService {
 
     const orderId = order.id;
     
-    // Store the listener
-    this.listeners.set(orderId, onUpdate);
-
-    // Clear any existing tracking for this order
+    // Clear any existing tracking for this order first
     this.stopTracking(orderId);
+
+    // Store the listener after clearing existing tracking
+    this.listeners.set(orderId, onUpdate);
 
     // Calculate route and start simulation
     this.simulateDeliveryTracking(order);

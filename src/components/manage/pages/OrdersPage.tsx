@@ -71,7 +71,7 @@ const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     filterOrders();
-  }, [orders, statusFilter, searchTerm, dateFilter]);
+  }, [orders, statusFilter, searchTerm, dateFilter, filterOrders]);
 
   const calculateStats = (ordersData: Order[]) => {
     const newStats: OrderStats = {
@@ -99,7 +99,7 @@ const OrdersPage: React.FC = () => {
           break;
       }
       
-      if (order.total && !isNaN(order.total)) {
+      if (order.total && !isNaN(order.total) && order.status !== 'cancelled') {
         newStats.revenue += order.total;
       }
     });
@@ -107,7 +107,7 @@ const OrdersPage: React.FC = () => {
     setStats(newStats);
   };
 
-  const filterOrders = () => {
+  const filterOrders = React.useCallback(() => {
     let filtered = [...orders];
 
     // Status filter
@@ -149,7 +149,7 @@ const OrdersPage: React.FC = () => {
     }
 
     setFilteredOrders(filtered);
-  };
+  }, [orders, statusFilter, searchTerm, dateFilter]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {

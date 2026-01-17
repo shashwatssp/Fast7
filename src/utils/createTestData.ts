@@ -6,19 +6,23 @@ export const createTestRestaurant = async (): Promise<void> => {
   try {
     const testRestaurant: Restaurant = {
       id: 'test-restaurant-123',
-      name: 'Test Restaurant',
-      ownerName: 'Test Owner',
-      email: 'test@fast7.com',
-      phone: '+1234567890',
-      address: '123 Test Street, Test City',
-      location: {
-        lat: 28.6139,
-        lng: 77.2090,
-        address: '123 Test Street, Test City'
+      ownerId: 'test-owner-123',
+      restaurantInfo: {
+        name: 'Test Restaurant',
+        address: '123 Test Street, Test City',
+        phone: '+1234567890',
+        email: 'test@fast7.com',
+        totalSalesDone: 0,
+        coordinates: {
+          lat: 28.6139,
+          lng: 77.2090
+        }
       },
-      cuisine: 'Multi-Cuisine',
-      rating: 4.5,
-      deliveryRadius: 10,
+      menuSelections: {
+        standardItems: {},
+        customItems: {}
+      },
+      orderingEnabled: true,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -37,16 +41,14 @@ export const createTestOrders = async (): Promise<void> => {
       {
         id: 'order-1',
         restaurantId: 'test-restaurant-123',
-        customerId: 'customer-1',
-        customerInfo: {
+        customer: {
           name: 'John Doe',
           phone: '+1234567890',
           email: 'john@example.com',
           address: '456 Customer Lane, Test City',
-          location: {
+          coordinates: {
             lat: 28.6239,
-            lng: 77.2190,
-            address: '456 Customer Lane, Test City'
+            lng: 77.2190
           }
         },
         items: [
@@ -65,36 +67,29 @@ export const createTestOrders = async (): Promise<void> => {
             category: 'South Indian'
           }
         ],
-        totalAmount: 320,
+        total: 320,
         status: 'pending',
+        pending: true,
         paymentStatus: 'paid',
-        orderType: 'delivery',
-        deliveryInfo: {
-          deliveryAddress: '456 Customer Lane, Test City',
-          deliveryLocation: {
-            lat: 28.6239,
-            lng: 77.2190,
-            address: '456 Customer Lane, Test City'
-          },
-          estimatedDeliveryTime: '30-45 mins',
-          deliveryFee: 40
+        deliveryCoordinates: {
+          lat: 28.6239,
+          lng: 77.2190
         },
+        estimatedDeliveryTime: 30,
         createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
         updatedAt: new Date()
       },
       {
         id: 'order-2',
         restaurantId: 'test-restaurant-123',
-        customerId: 'customer-2',
-        customerInfo: {
+        customer: {
           name: 'Jane Smith',
           phone: '+0987654321',
           email: 'jane@example.com',
           address: '789 Another Road, Test City',
-          location: {
+          coordinates: {
             lat: 28.6039,
-            lng: 77.1990,
-            address: '789 Another Road, Test City'
+            lng: 77.1990
           }
         },
         items: [
@@ -106,45 +101,29 @@ export const createTestOrders = async (): Promise<void> => {
             category: 'Italian'
           }
         ],
-        totalAmount: 390,
+        total: 390,
         status: 'delivering',
+        pending: false,
         paymentStatus: 'paid',
-        orderType: 'delivery',
-        deliveryInfo: {
-          deliveryAddress: '789 Another Road, Test City',
-          deliveryLocation: {
-            lat: 28.6039,
-            lng: 77.1990,
-            address: '789 Another Road, Test City'
-          },
-          estimatedDeliveryTime: '20-30 mins',
-          deliveryFee: 40,
-          deliveryRoute: {
-            distance: 5.2,
-            duration: 15,
-            steps: [
-              'Head north on Test Street',
-              'Turn right onto Customer Lane',
-              'Destination on your left'
-            ]
-          }
+        deliveryCoordinates: {
+          lat: 28.6039,
+          lng: 77.1990
         },
+        estimatedDeliveryTime: 20,
         createdAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
         updatedAt: new Date()
       },
       {
         id: 'order-3',
         restaurantId: 'test-restaurant-123',
-        customerId: 'customer-3',
-        customerInfo: {
+        customer: {
           name: 'Bob Johnson',
           phone: '+1122334455',
           email: 'bob@example.com',
           address: '321 Final Street, Test City',
-          location: {
+          coordinates: {
             lat: 28.6339,
-            lng: 77.2290,
-            address: '321 Final Street, Test City'
+            lng: 77.2290
           }
         },
         items: [
@@ -156,29 +135,15 @@ export const createTestOrders = async (): Promise<void> => {
             category: 'Mexican'
           }
         ],
-        totalAmount: 540,
+        total: 540,
         status: 'completed',
+        pending: false,
         paymentStatus: 'paid',
-        orderType: 'delivery',
-        deliveryInfo: {
-          deliveryAddress: '321 Final Street, Test City',
-          deliveryLocation: {
-            lat: 28.6339,
-            lng: 77.2290,
-            address: '321 Final Street, Test City'
-          },
-          estimatedDeliveryTime: 'Delivered',
-          deliveryFee: 40,
-          deliveryRoute: {
-            distance: 6.8,
-            duration: 20,
-            steps: [
-              'Head east on Main Street',
-              'Turn left onto Final Street',
-              'Destination on your right'
-            ]
-          }
+        deliveryCoordinates: {
+          lat: 28.6339,
+          lng: 77.2290
         },
+        estimatedDeliveryTime: 25,
         createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
         updatedAt: new Date()
       }
@@ -195,40 +160,41 @@ export const createTestOrders = async (): Promise<void> => {
   }
 };
 
-export const createTestOrder = async () => {
+export const createTestOrder = async (): Promise<Order> => {
   try {
     const orderId = `order-${Date.now()}`;
-    const testOrder = {
+    const testOrder: Order = {
       id: orderId,
       restaurantId: 'test-restaurant-123',
-      customerId: `customer-${Date.now()}`,
       customer: {
         name: 'Test Customer',
         phone: '+1234567890',
         address: '123 Test Street, Test City',
         coordinates: {
           lat: 28.6139 + Math.random() * 0.01,
-          lng: 77.2090 + Math.random() * 0.01,
-          address: '123 Test Street, Test City'
+          lng: 77.2090 + Math.random() * 0.01
         }
       },
       items: [
         {
+          id: 'test-item-1',
           name: 'Test Item',
           quantity: 1,
-          price: 100
+          price: 100,
+          category: 'Test'
         }
       ],
       total: 100,
       status: 'delivering',
+      pending: false,
+      paymentStatus: 'paid',
+      deliveryCoordinates: {
+        lat: 28.6139 + Math.random() * 0.01,
+        lng: 77.2090 + Math.random() * 0.01
+      },
+      estimatedDeliveryTime: 30,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      deliveryPartnerName: 'Test Driver',
-      deliveryPartnerPhone: '+1234567890',
-      deliveryPartnerLocation: {
-        lat: 28.6139,
-        lng: 77.2090
-      }
+      updatedAt: new Date()
     };
 
     await setDoc(doc(db, 'orders', orderId), testOrder);

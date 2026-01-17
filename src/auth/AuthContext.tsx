@@ -53,15 +53,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
-            setLoading(false);
             
             if (user) {
-                fetchRestaurantData(user);
+                try {
+                    await fetchRestaurantData(user);
+                } catch (error) {
+                    console.error('Error fetching restaurant data in auth state change:', error);
+                    setRestaurantData(null);
+                }
             } else {
                 setRestaurantData(null);
             }
+            
+            setLoading(false);
         });
 
         return () => unsubscribe();

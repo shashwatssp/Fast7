@@ -27,10 +27,18 @@ class NotificationService {
    * Check if notifications are supported in this browser
    */
   private checkSupport(): void {
-    this.isSupported = 'Notification' in window;
-    
-    if (this.isSupported) {
+    // First verify we're in a browser environment
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      this.isSupported = false;
+      return;
+    }
+
+    // Check if Notification API is available
+    if (typeof Notification !== 'undefined' && 'Notification' in window) {
+      this.isSupported = true;
       this.hasPermission = Notification.permission === 'granted';
+    } else {
+      this.isSupported = false;
     }
   }
 
@@ -48,6 +56,12 @@ class NotificationService {
     }
 
     try {
+      // Additional guard for Notification API
+      if (typeof Notification === 'undefined' || !Notification.requestPermission) {
+        console.warn('Notification.requestPermission is not available');
+        return false;
+      }
+
       const permission = await Notification.requestPermission();
       this.hasPermission = permission === 'granted';
       return this.hasPermission;
@@ -67,6 +81,12 @@ class NotificationService {
     }
 
     try {
+      // Additional guard for Notification constructor
+      if (typeof Notification === 'undefined') {
+        console.warn('Notification constructor is not available');
+        return;
+      }
+
       const notification = new Notification(config.title, {
         body: config.body,
         icon: config.icon || '/vite.svg',
@@ -87,9 +107,11 @@ class NotificationService {
         }, 10000);
       }
 
-      // Handle notification clicks
+      // Handle notification clicks with window guard
       notification.onclick = () => {
-        window.focus();
+        if (typeof window !== 'undefined' && window.focus) {
+          window.focus();
+        }
         notification.close();
       };
 
@@ -201,6 +223,11 @@ class NotificationService {
    */
   playNotificationSound(type: 'arrival' | 'update' | 'nearby' = 'update'): void {
     try {
+      // Check if Audio is available (SSR guard)
+      if (typeof Audio === 'undefined') {
+        return;
+      }
+
       const audio = new Audio();
       
       switch (type) {
@@ -211,7 +238,7 @@ class NotificationService {
           audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
           break;
         case 'nearby':
-          audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+          audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
           break;
       }
       
@@ -228,7 +255,8 @@ class NotificationService {
    * Vibrate device (if available)
    */
   vibrate(pattern: number | number[] = [200, 100, 200]): void {
-    if ('vibrate' in navigator) {
+    // Add navigator guard for SSR safety
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(pattern);
     }
   }

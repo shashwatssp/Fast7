@@ -108,16 +108,6 @@ function MapBounds({ points }: { points: RoutePoint[] }) {
 
 const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
   const { orderId } = useParams<{ orderId: string }>();
-  
-  if (!orderId) {
-    return (
-      <div className="order-tracking-container">
-        <div className="tracking-error">
-          <p>⚠️ Order ID is required</p>
-        </div>
-      </div>
-    );
-  }
   const [order, setOrder] = useState<OrderData | null>(null);
   const [restaurantLocation, setRestaurantLocation] = useState<RoutePoint | null>(null);
   const [customerLocation, setCustomerLocation] = useState<RoutePoint | null>(null);
@@ -132,6 +122,29 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
   const [currentStatus, setCurrentStatus] = useState<string>('preparing');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const arrivalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Refs to avoid stale closures in tracking callback
+  const currentStatusRef = useRef(currentStatus);
+  const showArrivalNotificationRef = useRef(showArrivalNotification);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    currentStatusRef.current = currentStatus;
+  }, [currentStatus]);
+  
+  useEffect(() => {
+    showArrivalNotificationRef.current = showArrivalNotification;
+  }, [showArrivalNotification]);
+  
+  if (!orderId) {
+    return (
+      <div className="order-tracking-container">
+        <div className="tracking-error">
+          <p>⚠️ Order ID is required</p>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch restaurant location
   useEffect(() => {
@@ -327,7 +340,7 @@ useEffect(() => {
     updateDeliveryStatus(update.status);
     
     // Show browser notifications for status changes
-    if (update.status !== currentStatus) {
+    if (update.status !== currentStatusRef.current) {
       notificationService.showOrderStatusNotification(update.status, order.id);
       
       // Play notification sound for status updates
@@ -335,14 +348,14 @@ useEffect(() => {
     }
     
     // Show nearby notification when partner is close
-    if (etaMinutes <= 5 && etaMinutes > 0 && currentStatus !== 'nearby') {
+    if (etaMinutes <= 5 && etaMinutes > 0 && currentStatusRef.current !== 'nearby') {
       notificationService.showDeliveryPartnerNearbyNotification(etaMinutes);
       notificationService.playNotificationSound('nearby');
       setCurrentStatus('nearby');
     }
     
     // Show arrival notification when delivered
-    if (update.status === 'delivered' && !showArrivalNotification) {
+    if (update.status === 'delivered' && !showArrivalNotificationRef.current) {
       setShowArrivalNotification(true);
       
       // Show comprehensive arrival notification

@@ -162,11 +162,11 @@ class OlaMapsService {
       }
 
       // If no results found, use fallback coordinates based on address patterns
-      console.warn(`Could not geocode address: "${address}". Using fallback coordinates.`);
+      console.warn('Could not geocode address. Using fallback coordinates.');
       return this.getFallbackCoordinates(address);
-    } catch (error) {
-      console.error('Error geocoding address:', error);
-      console.warn(`Using fallback coordinates for address: "${address}"`);
+    } catch (error: any) {
+      console.error('Error geocoding address:', error?.message || error);
+      console.warn('Using fallback coordinates for address');
       return this.getFallbackCoordinates(address);
     }
   }
@@ -246,7 +246,7 @@ class OlaMapsService {
     }
     
     // If no specific match, return default fallback
-    console.log(`Using default fallback coordinates for: "${address}"`);
+    console.log('Using default fallback coordinates');
     return defaultFallback;
   }
 }

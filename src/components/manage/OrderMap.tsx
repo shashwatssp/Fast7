@@ -156,7 +156,7 @@ const OrderMap: React.FC<OrderMapProps> = ({
     };
 
     fetchRouteData();
-  }, [restaurantAddress, deliveryAddress]);
+  }, [restaurantAddress, deliveryAddress, deliveryCoordinates]);
 
   const formatDistance = (meters: number): string => {
     if (meters < 1000) {

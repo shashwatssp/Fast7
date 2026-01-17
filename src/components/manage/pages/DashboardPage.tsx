@@ -37,6 +37,7 @@ const DashboardPage: React.FC = () => {
 
   const fetchDashboardData = async () => {
     if (!currentUser || !authRestaurantData) {
+      setLoading(false);
       return;
     }
 

@@ -63,6 +63,17 @@ function MapClickHandler({ onLocationSelect }: { onLocationSelect: (coords: Rout
   return null;
 }
 
+// Component to update map center when mapCenter changes
+function MapCenterUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+
+  return null;
+}
+
 // Reverse geocode coordinates to address
 async function reverseGeocode(coords: RoutePoint): Promise<string> {
   try {
@@ -403,19 +414,22 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             )}
 
             <MapClickHandler onLocationSelect={handleMapLocationSelect} />
+            <MapCenterUpdater center={mapCenter} />
           </MapContainer>
           </div>
         </div>
       </div>
 
       <div className="location-picker-footer">
-        <button
-          type="button"
-          className="btn-cancel"
-          onClick={onClose}
-        >
-          Cancel
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="button"
           className="btn-confirm-location"
