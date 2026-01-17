@@ -678,30 +678,82 @@ margin: 0 auto;
   margin-bottom: 0.75rem;
 }
 
-  .cart-item-details h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-  }
-  
-  .cart-item-price {
-    color: var(--primary-color);
-    font-weight: 600;
-  }
-  
-  .remove-item {
-    background-color: #fee2e2; /* red-100 */
-    color: #ef4444; /* red-500 */
-    border: none;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-    transition: var(--transition);
-  }
-  
-  .remove-item:hover {
-    background-color: #fecaca; /* red-200 */
-  }
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.cart-item-price {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--white);
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+.quantity-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.quantity-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.quantity-btn:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.quantity-display {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.remove-item {
+  background-color: #fee2e2; /* red-100 */
+  color: #ef4444; /* red-500 */
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.remove-item:hover {
+  background-color: #fecaca; /* red-200 */
+}
   
   .cart-total {
     padding: 1rem;

@@ -95,6 +95,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   initialAddress = '',
   onClose,
 }) => {
+  console.log('🗺️ LocationPicker component mounted with initialAddress:', initialAddress);
+  
   const [address, setAddress] = useState(initialAddress);
   const [selectedCoords, setSelectedCoords] = useState<RoutePoint | null>(null);
   const [loading, setLoading] = useState(false);
@@ -256,17 +258,21 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const handleConfirm = () => {
+    console.log('🔍 handleConfirm called with:', { selectedCoords, address });
+    
     if (!selectedCoords) {
+      console.log('❌ No coordinates selected');
       setError('Please select a location on the map or validate your address');
       return;
     }
 
     if (!address || address.trim().length < 5) {
+      console.log('❌ Address too short:', address);
       setError('Please enter a complete address');
       return;
     }
 
-    console.log('Location confirmed:', { address, coordinates: selectedCoords });
+    console.log('✅ Location confirmed:', { address, coordinates: selectedCoords });
     onLocationSelect(address, selectedCoords);
   };
 
@@ -379,12 +385,13 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
         </div>
 
         <div className="map-section">
-          <MapContainer
-            center={mapCenter}
-            zoom={13}
-            style={{ height: '100%', width: '100%' }}
-            scrollWheelZoom={true}
-          >
+          <div style={{ height: '400px', width: '100%', border: '2px solid red' }}>
+            <MapContainer
+              center={mapCenter}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={true}
+            >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -392,17 +399,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             
             {selectedCoords && (
               <Marker position={[selectedCoords.lat, selectedCoords.lng]} icon={selectedIcon}>
-                <L.Popup>
-                  <div>
-                    <strong>Selected Location</strong>
-                    <p>{address || 'No address'}</p>
-                  </div>
-                </L.Popup>
               </Marker>
             )}
 
             <MapClickHandler onLocationSelect={handleMapLocationSelect} />
           </MapContainer>
+          </div>
         </div>
       </div>
 

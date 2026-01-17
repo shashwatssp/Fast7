@@ -101,6 +101,16 @@ const OrderMap: React.FC<OrderMapProps> = ({
           return;
         }
 
+        // Check if fallback coordinates were used
+        const usedFallback = !deliveryCoordinates &&
+          (restaurantCoords.lat === 26.8467 && restaurantCoords.lng === 80.9462 || // Default fallback
+           deliveryCoords.lat === 26.8467 && deliveryCoords.lng === 80.9462); // Default fallback
+
+        if (usedFallback) {
+          console.log('Using fallback coordinates for one or more locations');
+          // Don't show error for fallback coordinates, just log it
+        }
+
         setRestaurantLocation(restaurantCoords);
         setDeliveryLocation(deliveryCoords);
 

@@ -405,13 +405,11 @@ const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({ onNext, onBack })
 
     if (loading) {
         return (
-            <div className="menu-step-container">
-                <div className="menu-loading">
-                    <div style={{ height: '20rem' }}></div>
-                    <div className="loading-spinner"></div>
-                    <p>Loading...</p>
-                    <div style={{ height: '200rem' }}></div>
-                </div>
+            <div>
+            <div style={{ height: '20rem' }}></div>
+                <div className="loading-spinner"></div>
+                <p>Loading...</p>
+                <div style={{ height: '200rem' }}></div>
             </div>
         );
     }

@@ -1,3 +1,6 @@
+/* Leaflet CSS for maps - must be imported first */
+@import 'leaflet/dist/leaflet.css';
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
