@@ -4,6 +4,8 @@ import MenuSelectionStep from './MenuSelectionStep';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useAuth } from '../auth/AuthContext';
+import LocationPicker from './website/LocationPicker';
+import { RoutePoint } from '../utils/olaMapsService';
 
 interface MenuSelections {
     standardCategories: (number | string)[];
@@ -26,8 +28,10 @@ const RestaurantOnboarding = () => {
         bio: '',
         phone: '',
         email: '',
-        address: ''
+        address: '',
+        coordinates: null as { lat: number; lng: number } | null
     });
+    const [showLocationPicker, setShowLocationPicker] = useState(false);
     const [menuSelections, setMenuSelections] = useState<MenuSelections>({
         standardCategories: [],
         standardItems: {},

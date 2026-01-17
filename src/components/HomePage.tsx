@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, db } from '../firebase'; // Ensure this path is correct
+import { auth, db } from '../firebase';
 import './HomePage.css';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useAuth } from '../auth/AuthContext';
 
 const HomePage = () => {
     const navigate = useNavigate();
-
+    const { loading } = useAuth();
 
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
@@ -16,20 +16,17 @@ const HomePage = () => {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
-
+            // Check if user has a restaurant
             const restaurantsCollectionRef = collection(db, 'restaurants');
             const querySnapshot = await getDocs(
                 query(restaurantsCollectionRef, where('ownerId', '==', user.uid))
             );
 
-            console.log(querySnapshot);
-            console.log(querySnapshot[0]);
-
             if (!querySnapshot.empty) {
-                console.log("YES");
+                console.log("Restaurant found, navigating to manage");
                 navigate('/manage');
             } else {
-                console.log("NO");
+                console.log("No restaurant found, navigating to onboarding");
                 navigate('/onboarding');
             }
         } catch (error) {
@@ -40,6 +37,20 @@ const HomePage = () => {
     const handleDashboardOpen = () => {
         navigate('/manage');
     };
+
+    if (loading) {
+        return (
+            <div className="animated-bg">
+                <div className="wrapper">
+                    <div className="container">
+                        <div style={{ height: '20rem' }}></div>
+                        <div className="loading-spinner"></div>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
 
     return (

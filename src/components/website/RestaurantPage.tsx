@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { addDoc, collection, doc, getDoc, runTransaction, serverTimestamp } from "firebase/firestore"
 import "./RestaurantPage.css"
 import { db } from "../../firebase"
+import LocationPicker from "./LocationPicker"
+import { RoutePoint } from "../../utils/olaMapsService"
 
 
 interface MenuItem {
@@ -13,6 +15,10 @@ interface MenuItem {
   description?: string
   price: number
   image?: string
+}
+
+interface CartItem extends MenuItem {
+  quantity: number
 }
 
 interface Category {
@@ -41,12 +47,14 @@ interface RestaurantData {
   menuSelections: MenuSelections
   restaurantInfo: RestaurantInfo
   orderingEnabled: boolean;
+  coverPhoto?: string;
 }
 
 interface CustomerInfo {
   name: string
   contact: string
   address: string
+  coordinates?: RoutePoint
 }
 
 interface RestaurantPageProps {
@@ -58,7 +66,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string | number | null>(null)
-  const [cart, setCart] = useState<MenuItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState<boolean>(false)
   const [menuItems, setMenuItems] = useState<Record<string | number, MenuItem[]>>({})
   const [searchTerm, setSearchTerm] = useState<string>("")
@@ -72,6 +80,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   })
   const [orderPlaced, setOrderPlaced] = useState<boolean>(false)
   const [orderId, setOrderId] = useState<string>("")
+  const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false)
 
   const getSubdomainFromUrl = () => {
     return subdomain;
@@ -85,12 +94,18 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       try {
         setLoading(true)
 
+        if (!restaurantDomain) {
+          setError("No restaurant domain provided")
+          setLoading(false)
+          return
+        }
+
         const restaurantDocRef = doc(db, "restaurants", restaurantDomain)
 
         const restaurantDoc = await getDoc(restaurantDocRef)
 
         if (!restaurantDoc.exists()) {
-          console.error("Restaurant document not found")
+          console.log("Restaurant document not found for domain:", restaurantDomain)
           setError("Restaurant not found")
           setLoading(false)
           return
@@ -165,7 +180,23 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   }, [activeCategory, menuItems, searchTerm, priceFilter])
 
   const addToCart = (item: MenuItem) => {
-    setCart([...cart, item])
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(cartItem => cartItem.id === item.id)
+    
+    if (existingItemIndex >= 0) {
+      // Update quantity if item exists
+      const newCart = [...cart]
+      newCart[existingItemIndex].quantity += 1
+      setCart(newCart)
+    } else {
+      // Add new item with quantity 1
+      const cartItem: CartItem = {
+        ...item,
+        quantity: 1
+      }
+      setCart([...cart, cartItem])
+    }
+    
     const cartButton = document.querySelector(".cart-button")
     if (cartButton) {
       cartButton.classList.add("pulse")
@@ -181,8 +212,19 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     setCart(newCart)
   }
 
+  const updateQuantity = (index: number, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(index)
+      return
+    }
+    
+    const newCart = [...cart]
+    newCart[index].quantity = quantity
+    setCart(newCart)
+  }
+
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + item.price, 0)
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0)
   }
 
   const toggleCart = () => {
@@ -212,8 +254,37 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     setCheckoutStep("checkout")
   }
 
+  const handleLocationSelect = (address: string, coordinates: RoutePoint) => {
+    console.log('📍 RestaurantPage.handleLocationSelect called:', { address, coordinates });
+    setCustomerInfo(prev => {
+      console.log('📍 Updating customerInfo from:', prev, 'to:', { ...prev, address, coordinates });
+      return {
+        ...prev,
+        address,
+        coordinates,
+      };
+    });
+    setShowLocationPicker(false);
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    console.log('🛒 handlePlaceOrder called with customerInfo:', customerInfo);
+  
+    // Validate that location is selected
+    if (!customerInfo.coordinates) {
+      console.log('❌ No coordinates in customerInfo:', customerInfo);
+      alert('Please select a location using the "Select Location" button to ensure accurate delivery address.');
+      setShowLocationPicker(true);
+      return;
+    }
+
+    if (!customerInfo.address || customerInfo.address.trim().length < 10) {
+      console.log('❌ Address too short:', customerInfo.address);
+      alert('Please enter a complete delivery address (at least 10 characters).');
+      return;
+    }
   
     try {
       // Create a unique order ID
@@ -222,16 +293,26 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       // Calculate order total
       const orderTotal = calculateTotal()
       
-      // Create order object
+      // Create order object with coordinates
       const orderData = {
         id: newOrderId,
         restaurantId: restaurant?.domainName,
-        customer: customerInfo,
+        customer: {
+          ...customerInfo,
+          coordinates: {
+            lat: customerInfo.coordinates.lat,
+            lng: customerInfo.coordinates.lng,
+          },
+        },
         items: cart,
         total: orderTotal,
         pending: true,
+        status: 'pending',
+        orderTime: new Date().toISOString(),
         createdAt: serverTimestamp(),
       }
+
+      console.log('Placing order with data:', orderData);
       
       // Add to Firestore
       const ordersRef = collection(db, "orders")
@@ -267,16 +348,14 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
       setOrderId(newOrderId)
       setOrderPlaced(true)
       
-      // Reset cart after delay
+      // Redirect to order tracking after 2 seconds
       setTimeout(() => {
-        setCart([])
-        setShowCart(false)
-        setCheckoutStep("cart")
-        setOrderPlaced(false)
-      }, 5000)
+        // Navigate to order tracking page
+        window.location.href = `/track/${newOrderId}`;
+      }, 2000)
     } catch (error) {
       console.error("Error processing order: ", error)
-      // Handle error - perhaps show a message to the user
+      alert('There was an error placing your order. Please try again.');
     }
   }
   
@@ -474,11 +553,28 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                             <div key={index} className="cart-item">
                               <div className="cart-item-details">
                                 <h3>{item.name}</h3>
-                                <p className="cart-item-price">₹{item.price}</p>
+                                <p className="cart-item-price">₹{item.price} x {item.quantity}</p>
                               </div>
-                              <button className="remove-item" onClick={() => removeFromCart(index)}>
-                                Remove
-                              </button>
+                              <div className="cart-item-actions">
+                                <div className="quantity-controls">
+                                  <button
+                                    className="quantity-btn"
+                                    onClick={() => updateQuantity(index, item.quantity - 1)}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="quantity">{item.quantity}</span>
+                                  <button
+                                    className="quantity-btn"
+                                    onClick={() => updateQuantity(index, item.quantity + 1)}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <button className="remove-item" onClick={() => removeFromCart(index)}>
+                                  Remove
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -519,20 +615,45 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="address">Delivery Address</label>
-                        <textarea
-                          id="address"
-                          name="address"
-                          required
-                          rows={3}
-                          value={customerInfo.address}
-                          onChange={handleInputChange}
-                        />
+                        <label htmlFor="address">Delivery Address *</label>
+                        <div className="address-input-container">
+                          <textarea
+                            id="address"
+                            name="address"
+                            required
+                            rows={3}
+                            value={customerInfo.address}
+                            onChange={handleInputChange}
+                            placeholder="Enter complete address or click 'Select Location' to use map"
+                            readOnly={!!customerInfo.coordinates}
+                            className={customerInfo.coordinates ? "address-validated" : ""}
+                          />
+                          <button
+                            type="button"
+                            className="btn-select-location"
+                            onClick={() => {
+                              console.log('📍 Location picker button clicked, current customerInfo:', customerInfo);
+                              setShowLocationPicker(true);
+                            }}
+                          >
+                            📍 {customerInfo.coordinates ? "Change Location" : "Select Location"}
+                          </button>
+                        </div>
+                        {customerInfo.coordinates && (
+                          <div className="location-confirmed">
+                            ✓ Location confirmed: {customerInfo.coordinates.lat.toFixed(6)}, {customerInfo.coordinates.lng.toFixed(6)}
+                          </div>
+                        )}
+                        {!customerInfo.coordinates && customerInfo.address && (
+                          <div className="location-warning">
+                            ⚠️ Please click "Select Location" to validate your address and ensure accurate delivery
+                          </div>
+                        )}
                       </div>
 
                       <div className="order-summary">
                         <h3>Order Summary</h3>
-                        <p>{cart.length} item(s)</p>
+                        <p>{cart.reduce((total, item) => total + item.quantity, 0)} item(s)</p>
                         <p className="summary-total">Total: ₹{calculateTotal()}</p>
                       </div>
 
@@ -551,6 +672,15 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Location Picker Modal */}
+      {showLocationPicker && (
+        <LocationPicker
+          onLocationSelect={handleLocationSelect}
+          initialAddress={customerInfo.address}
+          onClose={() => setShowLocationPicker(false)}
+        />
       )}
 
       {/* Footer */}

@@ -8,6 +8,48 @@
   </head>
   <body>
     <div id="root"></div>
+    <script src="/block-tracking.js"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Disable Bugsnag and other third-party error tracking that might be injected by hosting providers
+      (function() {
+        // Prevent Bugsnag from loading
+        if (typeof window !== 'undefined') {
+          // Block Bugsnag requests
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            const url = args[0];
+            if (typeof url === 'string' && (url.includes('bugsnag.com') || url.includes('sessions.bugsnag.com'))) {
+              return Promise.resolve(new Response('null', { status: 204, statusText: 'No Content' }));
+            }
+            return originalFetch.apply(this, args);
+          };
+
+          // Block XMLHttpRequest to Bugsnag
+          const originalXHROpen = XMLHttpRequest.prototype.open;
+          XMLHttpRequest.prototype.open = function(method, url, ...args) {
+            if (typeof url === 'string' && (url.includes('bugsnag.com') || url.includes('sessions.bugsnag.com'))) {
+              return; // Don't open the request
+            }
+            return originalXHROpen.call(this, method, url, ...args);
+          };
+
+          // Suppress console errors related to Bugsnag
+          const originalError = console.error;
+          console.error = function(...args) {
+            const message = args[0];
+            if (typeof message === 'string' && message.includes('bugsnag')) {
+              return; // Suppress Bugsnag-related errors
+            }
+            return originalError.apply(this, args);
+          };
+
+          // Disable Bugsnag if it's already loaded
+          if (window.bugsnag) {
+            window.bugsnag = undefined;
+          }
+        }
+      })();
+    </script>
   </body>
 </html>
