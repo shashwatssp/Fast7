@@ -14,7 +14,7 @@
     'google-analytics.com'
   ];
   
-  // List of allowed Google API domains
+  // List of allowed Google API domains (expanded to prevent auth issues)
   const ALLOWED_GOOGLE_DOMAINS = [
     'apis.google.com',
     'accounts.google.com',
@@ -22,7 +22,11 @@
     'oauth2.googleapis.com',
     'firebase.googleapis.com',
     'firestore.googleapis.com',
-    'identitytoolkit.googleapis.com'
+    'identitytoolkit.googleapis.com',
+    'google.com',
+    'www.google.com',
+    'firebaseio.com',
+    'gstatic.com'
   ];
 
   // Override document.createElement to prevent tracking scripts
@@ -33,7 +37,7 @@
     if (tagName.toLowerCase() === 'script') {
       const originalSetAttribute = element.setAttribute;
       element.setAttribute = function(name, value) {
-        if (name === 'src') {
+        if (name === 'src' && typeof value === 'string') {
           // Block tracking domains
           if (BLOCKED_DOMAINS.some(domain => value.includes(domain))) {
             console.warn('Blocked tracking script:', value);
@@ -54,7 +58,7 @@
   // Block dynamic script insertion
   const originalAppendChild = Node.prototype.appendChild;
   Node.prototype.appendChild = function(child) {
-    if (child.tagName === 'SCRIPT' && child.src) {
+    if (child.tagName === 'SCRIPT' && child.src && typeof child.src === 'string') {
       // Block tracking domains
       if (BLOCKED_DOMAINS.some(domain => child.src.includes(domain))) {
         console.warn('Blocked dynamic tracking script:', child.src);
@@ -106,7 +110,7 @@
   function removeTrackingScripts() {
     const scripts = document.querySelectorAll('script');
     scripts.forEach(script => {
-      if (script.src) {
+      if (script.src && typeof script.src === 'string') {
         // Block tracking domains
         if (BLOCKED_DOMAINS.some(domain => script.src.includes(domain))) {
           script.remove();
@@ -127,8 +131,8 @@
     document.addEventListener('DOMContentLoaded', removeTrackingScripts);
   }
 
-  // Periodically check for and remove tracking scripts
-  setInterval(removeTrackingScripts, 5000);
+  // Periodically check for and remove tracking scripts (reduced frequency)
+  setInterval(removeTrackingScripts, 10000);
 
   console.log('Tracking protection enabled');
 })();

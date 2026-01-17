@@ -12,6 +12,10 @@ const HomePage = () => {
 
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+        
         try {
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
@@ -29,8 +33,25 @@ const HomePage = () => {
                 console.log("No restaurant found, navigating to onboarding");
                 navigate('/onboarding');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error signing in with Google:', error);
+            
+            // Handle specific Firebase auth errors
+            if (error.code === 'auth/cancelled-popup-request') {
+                console.log('Popup was cancelled by user or blocked');
+                // Don't show an error for user cancellation
+                return;
+            } else if (error.code === 'auth/popup-blocked') {
+                console.error('Popup was blocked by browser. Please allow popups for this site.');
+                alert('Please allow popups for this site to sign in with Google.');
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                console.log('Popup was closed by user');
+                // Don't show an error for user closing popup
+                return;
+            } else {
+                console.error('Authentication error:', error.message);
+                alert('Failed to sign in with Google. Please try again.');
+            }
         }
     };
 
