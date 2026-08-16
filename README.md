@@ -595,21 +595,10 @@ SOFTWARE.
 
 ---
 
-## 📞 Support
-
-For support, please contact:
-
-- **Email**: support@fast7.com
-- **Documentation**: [Fast7 Documentation](https://docs.fast7.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/fast7-restaurant-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/fast7-restaurant-system/discussions)
-
----
-
 <div align="center">
 
 **Made with ❤️ by the Fast7 Team**
 
-[⭐ Star this repo](https://github.com/yourusername/fast7-restaurant-system) • [🐛 Report issues](https://github.com/yourusername/fast7-restaurant-system/issues) • [📖 Documentation](https://docs.fast7.com)
+[⭐ Star this repo](https://github.com/yourusername/fast7-restaurant-system)
 
 </div>
