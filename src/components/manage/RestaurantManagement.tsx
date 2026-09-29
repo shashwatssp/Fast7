@@ -2,24 +2,45 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import './RestaurantManagement.css';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import EditMenuComponent from './EditMenuComponent';
 import OrderMap from './OrderMap';
 import { Order, Restaurant, CustomerInfo, OrderItem } from '../../types/Order';
+import { getEffectiveOrderStatus } from '../../utils/orderStatus';
+import {
+  Menu as MenuIcon,
+  Bell,
+  LogOut,
+  Home,
+  ClipboardList,
+  UtensilsCrossed,
+  Settings,
+  Palette,
+  Clock,
+  Truck,
+  CheckCircle2,
+  MapPin,
+  Rocket,
+  Check,
+  X,
+  ExternalLink,
+  Store,
+  Plus,
+} from 'lucide-react';
+
 
 const RestaurantManagement = () => {
     const [isOrderingEnabled, setIsOrderingEnabled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { currentUser, logout, restaurantData: authRestaurantData } = useAuth();
-    const [loading, setLoading] = useState(true);
+    const { currentUser, logout, loading, restaurantData, restaurants: myRestaurants, activeRestaurantId: activeId, setActiveRestaurantId: setActiveId, refreshRestaurantData } = useAuth();
     const [error, setError] = useState<string | null>(null);
-    const [restaurantData, setRestaurantData] = useState<Restaurant | null>(null);
     const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
     const [deliveringOrders, setDeliveringOrders] = useState<Order[]>([]);
     const [pastOrders, setPastOrders] = useState<Order[]>([]);
+    const [cancelledCount, setCancelledCount] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [showMenuSelection, setShowMenuSelection] = useState(false);
     const [showEditMenu, setShowEditMenu] = useState(false);
@@ -42,53 +63,62 @@ const RestaurantManagement = () => {
         setCoverPhoto(restaurantData?.coverPhoto || "");
     };
 
-    const fetchRestaurantData = async () => {
-        if (!currentUser) {
-            setLoading(false);
-            setError("You must be logged in to view this page");
-            return;
-        }
-
-        // Use restaurant data from AuthContext if available
-        if (authRestaurantData) {
-            setRestaurantData(authRestaurantData);
-            setIsOrderingEnabled(authRestaurantData.orderingEnabled || false);
-            fetchOrders(authRestaurantData.id);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            // Create a query to find restaurants where ownerId matches currentUser.uid
-            const restaurantsRef = collection(db, 'restaurants');
-            const q = query(restaurantsRef, where("ownerId", "==", currentUser.uid));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                setError("No restaurants found for your account");
-            } else {
-                // Get the first restaurant (assuming a user has one restaurant for simplicity)
-                const restaurantDoc = querySnapshot.docs[0];
-                const data = restaurantDoc.data();
-                setRestaurantData({
-                    id: restaurantDoc.id,
-                    ...data
-                } as Restaurant);
-                setIsOrderingEnabled(data.orderingEnabled);
-                fetchOrders(restaurantDoc.id);
-            }
-        } catch (err) {
-            console.error("Error fetching restaurant data:", err);
-            setError("An error occurred while fetching your restaurant data");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // Follow the active website's orders, including updates made from other pages.
     useEffect(() => {
-        fetchRestaurantData();
-    }, [currentUser]);
+        if (!restaurantData?.id) {
+            setPendingOrders([]);
+            setDeliveringOrders([]);
+            setPastOrders([]);
+            setCancelledCount(0);
+            return;
+        }
+        setIsOrderingEnabled((restaurantData as Restaurant).orderingEnabled || false);
+        const ordersRef = collection(db, 'orders');
+        const q = query(ordersRef, where("restaurantId", "==", restaurantData.id));
+        return onSnapshot(q, (snapshot) => {
+            const pending: Order[] = [];
+            const delivering: Order[] = [];
+            const past: Order[] = [];
+            let cancelled = 0;
+            const uniqueOrders = new Map<string, Order & { docId: string }>();
+
+            snapshot.forEach((orderDoc) => {
+                const data = orderDoc.data() as Order;
+                const orderData = {
+                    ...data,
+                    id: data.id || orderDoc.id,
+                    docId: orderDoc.id,
+                    items: data.items?.map(item => ({
+                        ...item,
+                        quantity: Number.isFinite(Number(item.quantity)) ? Number(item.quantity) || 1 : 1,
+                        price: Number.isFinite(Number(item.price)) ? Number(item.price) : 0
+                    }))
+                };
+                const previous = uniqueOrders.get(orderData.id);
+                const updatedAt = orderData.updatedAt?.toMillis?.() || 0;
+                if (!previous || updatedAt >= (previous.updatedAt?.toMillis?.() || 0)) {
+                    uniqueOrders.set(orderData.id, orderData);
+                }
+            });
+
+            uniqueOrders.forEach(order => {
+                switch (getEffectiveOrderStatus(order)) {
+                    case 'pending': pending.push(order); break;
+                    case 'delivering': delivering.push(order); break;
+                    case 'completed': past.push(order); break;
+                    case 'cancelled': cancelled++; break;
+                }
+            });
+            const sortOrders = (orders: Order[]) => orders.sort((a, b) =>
+                (b.createdAt?.toMillis?.() || Date.parse(b.orderTime || '') || 0) -
+                (a.createdAt?.toMillis?.() || Date.parse(a.orderTime || '') || 0)
+            );
+            setPendingOrders(sortOrders(pending));
+            setDeliveringOrders(sortOrders(delivering));
+            setPastOrders(sortOrders(past));
+            setCancelledCount(cancelled);
+        }, err => console.error("Error fetching orders:", err));
+    }, [restaurantData]);
 
     const handleEditMenuClose = (updatedMenu?: any) => {
         // Simply set showMenuSelection to false to hide the EditMenuComponent
@@ -97,7 +127,7 @@ const RestaurantManagement = () => {
         // If menu was updated (not just canceled), refresh data
         if (updatedMenu) {
             // Refresh restaurant data or update the local state
-            fetchRestaurantData();
+            refreshRestaurantData();
         }
     };
 
@@ -141,86 +171,14 @@ const RestaurantManagement = () => {
             await updateDoc(doc(db, 'restaurants', restaurantData!.id), { coverPhoto });
             setShowCoverPhotoForm(false);
 
-            // Update local state to reflect the change
-            setRestaurantData(prev => prev ? ({
-                ...prev,
-                coverPhoto
-            }) : null);
+            // Refresh shared state to reflect the change
+            await refreshRestaurantData();
         } catch (err) {
             console.error("Error updating cover photo:", err);
             alert("Failed to update cover photo. Please try again.");
         }
     };
 
-    const fetchOrders = async (restaurantId: string) => {
-        try {
-            const ordersRef = collection(db, 'orders');
-            const q = query(ordersRef, where("restaurantId", "==", restaurantId));
-            const querySnapshot = await getDocs(q);
-
-            const pending: Order[] = [];
-            const delivering: Order[] = [];
-            const past: Order[] = [];
-
-            querySnapshot.forEach((doc) => {
-                const orderData = { id: doc.id, ...doc.data() } as Order;
-                
-                // Fix NaN quantity and price issues by ensuring items have proper values
-                if (orderData.items) {
-                    orderData.items = orderData.items.map(item => {
-                        const quantity = item.quantity || 1;
-                        const price = item.price || 0;
-                        return {
-                            ...item,
-                            quantity: isNaN(quantity) ? 1 : Number(quantity),
-                            price: isNaN(price) ? 0 : Number(price)
-                        };
-                    });
-                }
-                
-                if (orderData.status === 'pending' || orderData.pending) {
-                    pending.push(orderData);
-                } else if (orderData.status === 'delivering') {
-                    delivering.push(orderData);
-                } else {
-                    past.push(orderData);
-                }
-            });
-
-            // Sort orders from newest to oldest based on createdAt or orderTime
-            const sortOrders = (orders: Order[]) => {
-                return orders.sort((a, b) => {
-                    let timeA: number;
-                    let timeB: number;
-                    
-                    // Try to get time from Firebase Timestamp first
-                    if (a.createdAt && typeof a.createdAt.toMillis === 'function') {
-                        timeA = a.createdAt.toMillis();
-                    } else if (a.orderTime) {
-                        timeA = new Date(a.orderTime).getTime();
-                    } else {
-                        timeA = 0; // Fallback for very old orders
-                    }
-                    
-                    if (b.createdAt && typeof b.createdAt.toMillis === 'function') {
-                        timeB = b.createdAt.toMillis();
-                    } else if (b.orderTime) {
-                        timeB = new Date(b.orderTime).getTime();
-                    } else {
-                        timeB = 0; // Fallback for very old orders
-                    }
-                    
-                    return timeB - timeA; // Newest first
-                });
-            };
-
-            setPendingOrders(sortOrders(pending));
-            setDeliveringOrders(sortOrders(delivering));
-            setPastOrders(sortOrders(past));
-        } catch (err) {
-            console.error("Error fetching orders:", err);
-        }
-    };
 
     const handleBack = () => {
         setShowMenuSelection(false); // Come back to current page
@@ -240,85 +198,17 @@ const RestaurantManagement = () => {
         }
     };
 
-    const toggleOrderStatus = async (orderId: string) => {
+    const updateOrderStatus = async (order: Order, status: Order['status']) => {
         try {
-            console.log("orderId ", orderId);
-
-            // Query to find the order document with matching id field
-            const ordersRef = collection(db, 'orders');
-            const q = query(ordersRef, where("id", "==", orderId));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                console.error("No order found with ID:", orderId);
-                return;
-            }
-
-            // Update the first matching document
-            const orderDoc = querySnapshot.docs[0];
-            await updateDoc(orderDoc.ref, {
+            const docId = (order as Order & { docId: string }).docId;
+            await updateDoc(doc(db, 'orders', docId), {
                 pending: false,
-                status: 'completed',
+                status,
                 updatedAt: new Date()
             });
-
-            console.log("Order status updated successfully");
-            fetchOrders(restaurantData!.id);
         } catch (err) {
             console.error("Error updating order status:", err);
-        }
-    };
-
-    const startDelivery = async (orderId: string) => {
-        try {
-            console.log("Starting delivery for order:", orderId);
-
-            const ordersRef = collection(db, 'orders');
-            const q = query(ordersRef, where("id", "==", orderId));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                console.error("No order found with ID:", orderId);
-                return;
-            }
-
-            const orderDoc = querySnapshot.docs[0];
-            await updateDoc(orderDoc.ref, {
-                pending: false,
-                status: 'delivering',
-                updatedAt: new Date()
-            });
-
-            console.log("Order marked as delivering");
-            fetchOrders(restaurantData!.id);
-        } catch (err) {
-            console.error("Error starting delivery:", err);
-        }
-    };
-
-    const completeDelivery = async (orderId: string) => {
-        try {
-            console.log("Completing delivery for order:", orderId);
-
-            const ordersRef = collection(db, 'orders');
-            const q = query(ordersRef, where("id", "==", orderId));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                console.error("No order found with ID:", orderId);
-                return;
-            }
-
-            const orderDoc = querySnapshot.docs[0];
-            await updateDoc(orderDoc.ref, {
-                status: 'completed',
-                updatedAt: new Date()
-            });
-
-            console.log("Order marked as completed");
-            fetchOrders(restaurantData!.id);
-        } catch (err) {
-            console.error("Error completing delivery:", err);
+            alert("Could not update this order. Please try again.");
         }
     };
 
@@ -356,13 +246,13 @@ const RestaurantManagement = () => {
         );
     }
 
-    // If no restaurant data, show an appropriate message
-    if (!restaurantData) {
+    // If the user owns no websites at all, show an appropriate message
+    if (!restaurantData || myRestaurants.length === 0) {
         return (
             <div className="no-restaurant-container">
-                <h2>No Restaurant Found</h2>
-                <p>You don't have any restaurants associated with your account.</p>
-                <button onClick={() => window.location.href = "/create"}>Create a Restaurant</button>
+                <h2>No Website Yet</h2>
+                <p>You don't have any websites associated with your account. Create your first website — it only takes 7 minutes.</p>
+                <button onClick={() => navigate('/onboarding')}><Plus size={16} /> Create Your First Website</button>
             </div>
         );
     }
@@ -383,29 +273,18 @@ const RestaurantManagement = () => {
                 {/* Mobile Header */}
                 <header className="dashboard-header">
                     <div className="header-left">
-                        <button className="menu-button" onClick={toggleMobileMenu}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                            </svg>
+                        <button className="menu-button" onClick={toggleMobileMenu} aria-label="Menu">
+                            <MenuIcon size={24} />
                         </button>
                         <h1 className="restaurant-name">{restaurantData.restaurantInfo.name}</h1>
                     </div>
                     <div className="header-right">
                         <div className="notification-bell">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
+                            <Bell size={24} />
                             <span className="notification-badge">0</span>
                         </div>
-                        <button className="logout-btn" onClick={handleLogout} title="Logout">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
+                        <button className="logout-btn" onClick={handleLogout} title="Logout" aria-label="Logout">
+                            <LogOut size={20} />
                         </button>
                     </div>
                 </header>
@@ -413,44 +292,29 @@ const RestaurantManagement = () => {
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
                     <div className="mobile-menu">
-                        <nav>
+                    <nav>
                             <a href="/manage/dashboard" className="mobile-menu-item" onClick={(e) => { e.preventDefault(); navigate('/manage/dashboard'); }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
+                                <Home size={20} />
                                 Dashboard
                             </a>
                             <a href="/manage/orders" className="mobile-menu-item" onClick={(e) => { e.preventDefault(); navigate('/manage/orders'); }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                    <polyline points="10 9 9 9 8 9"></polyline>
-                                </svg>
+                                <ClipboardList size={20} />
                                 Orders
                             </a>
                             <a href="/manage/menu" className="mobile-menu-item" onClick={(e) => { e.preventDefault(); navigate('/manage/menu'); }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                </svg>
+                                <UtensilsCrossed size={20} />
                                 Menu
                             </a>
+                            <a href="/manage/templates" className="mobile-menu-item" onClick={(e) => { e.preventDefault(); navigate('/manage/templates'); }}>
+                                <Palette size={20} />
+                                Templates
+                            </a>
                             <a href="/manage/settings" className="mobile-menu-item" onClick={(e) => { e.preventDefault(); navigate('/manage/settings'); }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                                </svg>
+                                <Settings size={20} />
                                 Settings
                             </a>
                             <a href="#" className="mobile-menu-item" onClick={handleLogout}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                    <polyline points="16 17 21 12 16 7"></polyline>
-                                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                                </svg>
+                                <LogOut size={20} />
                                 Logout
                             </a>
                         </nav>
@@ -459,6 +323,50 @@ const RestaurantManagement = () => {
 
                 {/* Main Content */}
                 <main className="dashboard-main">
+                    {/* Greeting band with website switcher */}
+                    <div className="greeting-band">
+                        <div className="greeting-left">
+                            <p className="greeting-hello">Welcome back</p>
+                            <h1 className="greeting-name">{restaurantData.restaurantInfo?.name || activeId}</h1>
+                            <div className="greeting-meta">
+                                <a
+                                    className="live-site-link"
+                                    href={`/${activeId}`}
+                                    onClick={(e) => { e.preventDefault(); navigate(`/${activeId}`); }}
+                                >
+                                    <ExternalLink size={14} /> View Live Site
+                                </a>
+                                {myRestaurants.length > 1 && (
+                                    <span className="greeting-count">{myRestaurants.length} websites</span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="greeting-actions">
+                            {myRestaurants.length > 1 && (
+                                <label className="website-switcher">
+                                    <Store size={16} />
+                                    <select
+                                        value={activeId || ""}
+                                        onChange={(e) => setActiveId(e.target.value)}
+                                    >
+                                        {myRestaurants.map((r) => (
+                                            <option key={r.id} value={r.id}>
+                                                {r.restaurantInfo?.name || r.id}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
+                            <button className="new-website-btn" onClick={() => navigate('/onboarding')}>
+                                <Plus size={16} /> New Website
+                            </button>
+                        </div>
+                    </div>
+                    <p className="order-count-summary">
+                        Total orders: {pendingOrders.length + deliveringOrders.length + pastOrders.length + cancelledCount}
+                        <span> · In transit: {deliveringOrders.length} · Delivered: {pastOrders.length}{cancelledCount > 0 ? ` · Cancelled: ${cancelledCount}` : ''}</span>
+                    </p>
+
                     {/* Restaurant Status */}
                     <div className="feature-card status-card">
                         <h2 className="card-title">Restaurant Status</h2>
@@ -482,7 +390,7 @@ const RestaurantManagement = () => {
 
                     {/* Pending Orders */}
                     <div className="feature-card orders-card">
-                        <h2 className="card-title">🕐 Pending Orders ({pendingOrders.length})</h2>
+                        <h2 className="card-title"><Clock size={18} /> Pending Orders ({pendingOrders.length})</h2>
                         <div className="orders-list">
                             {pendingOrders.map((order) => (
                                 <div key={order.id} className="order-item">
@@ -499,7 +407,7 @@ const RestaurantManagement = () => {
                                             <span className="order-total">₹{isNaN(order.total) ? 0 : order.total}</span>
                                         </div>
                                         <div className="order-address">
-                                            📍 {order.customer.address}
+                                            <MapPin size={14} /> {order.customer.address}
                                         </div>
                                         {order.customer?.address && (
                                             <button
@@ -510,22 +418,22 @@ const RestaurantManagement = () => {
                                                     setShowOrderMap(true);
                                                 }}
                                             >
-                                                📍 View Route
+                                                <MapPin size={15} /> View Route
                                             </button>
                                         )}
                                     </div>
                                     <div className="order-actions">
                                         <button
                                             className="start-delivery-btn"
-                                            onClick={() => startDelivery(order.id)}
+                                            onClick={() => updateOrderStatus(order, 'delivering')}
                                         >
-                                            🚀 Start Delivery
+                                            <Rocket size={15} /> Start Delivery
                                         </button>
                                         <button
                                             className="fulfill-btn"
-                                            onClick={() => toggleOrderStatus(order.id)}
+                                            onClick={() => updateOrderStatus(order, 'completed')}
                                         >
-                                            ✓ Complete
+                                            <Check size={15} /> Complete
                                         </button>
                                     </div>
                                 </div>
@@ -536,7 +444,7 @@ const RestaurantManagement = () => {
 
                     {/* Delivering Orders */}
                     <div className="feature-card orders-card">
-                        <h2 className="card-title">🚚 Currently Delivering ({deliveringOrders.length})</h2>
+                        <h2 className="card-title"><Truck size={18} /> Currently Delivering ({deliveringOrders.length})</h2>
                         <div className="orders-list">
                             {deliveringOrders.map((order) => (
                                 <div key={order.id} className="order-item delivering">
@@ -551,11 +459,11 @@ const RestaurantManagement = () => {
                                             <span className="order-total">₹{isNaN(order.total) ? 0 : order.total}</span>
                                         </div>
                                         <div className="order-address">
-                                            📍 {order.customer.address}
+                                            <MapPin size={14} /> {order.customer.address}
                                         </div>
                                         {order.deliveryDistance && (
                                             <span className="delivery-distance">
-                                                📍 {Math.round(order.deliveryDistance)}m away
+                                                <MapPin size={14} /> {Math.round(order.deliveryDistance)}m away
                                             </span>
                                         )}
                                         {order.customer?.address && (
@@ -567,16 +475,16 @@ const RestaurantManagement = () => {
                                                     setShowOrderMap(true);
                                                 }}
                                             >
-                                                📍 Track Delivery
+                                                <MapPin size={15} /> Track Delivery
                                             </button>
                                         )}
                                     </div>
                                     <div className="order-actions">
                                         <button
                                             className="complete-delivery-btn"
-                                            onClick={() => completeDelivery(order.id)}
+                                            onClick={() => updateOrderStatus(order, 'completed')}
                                         >
-                                            ✓ Delivered
+                                            <Check size={15} /> Delivered
                                         </button>
                                     </div>
                                 </div>
@@ -587,7 +495,7 @@ const RestaurantManagement = () => {
 
                     {/* Past Orders */}
                     <div className="feature-card orders-card">
-                        <h2 className="card-title">✅ Completed Orders ({pastOrders.length})</h2>
+                        <h2 className="card-title"><CheckCircle2 size={18} /> Completed Orders ({pastOrders.length})</h2>
                         <div className="orders-list">
                             {pastOrders.map((order) => (
                                 <div key={order.id} className="order-item completed">
@@ -604,7 +512,7 @@ const RestaurantManagement = () => {
                                         </div>
                                         {order.actualDeliveryTime && (
                                             <span className="delivery-time">
-                                                ⏱️ Delivered in {order.actualDeliveryTime}min
+                                                <Clock size={14} /> Delivered in {order.actualDeliveryTime}min
                                             </span>
                                         )}
                                         {order.customer?.address && (
@@ -616,7 +524,7 @@ const RestaurantManagement = () => {
                                                     setShowOrderMap(true);
                                                 }}
                                             >
-                                                📍 View Route
+                                                <MapPin size={15} /> View Route
                                             </button>
                                         )}
                                     </div>
@@ -706,6 +614,33 @@ const RestaurantManagement = () => {
                             </div>
                         </div>
 
+                        {/* Website Templates Card */}
+                        <div className="feature-card templates-card">
+                            <div className="card-header">
+                                <div className="card-icon">
+                                    <Palette size={22} />
+                                </div>
+                                <div className="card-title-container">
+                                    <h2 className="card-title">Website Templates</h2>
+                                    <p className="card-description">Give your website a fresh new look</p>
+                                </div>
+                            </div>
+                            <div className="card-content">
+                                <div className="stat-container">
+                                    <span className="stat-label">Designer Themes</span>
+                                    <span className="stat-badge">6</span>
+                                </div>
+                            </div>
+                            <div className="card-footer">
+                                <a href="/manage/templates" className="action-button" onClick={(e) => { e.preventDefault(); navigate('/manage/templates'); }}>
+                                    Browse Templates
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
                         {/* Total Sales Card */}
                         <div className="feature-card sales-card">
                             <div className="card-header">
@@ -744,7 +679,7 @@ const RestaurantManagement = () => {
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h2>Order Details</h2>
-                                <button className="close-btn" onClick={() => setSelectedOrder(null)}>×</button>
+                                <button className="close-btn" onClick={() => setSelectedOrder(null)}><X size={20} /></button>
                             </div>
                             <div className="modal-body">
                                 <div className="order-info">
@@ -754,7 +689,13 @@ const RestaurantManagement = () => {
                                     <p><strong>Address:</strong> {selectedOrder.customer.address}</p>
                                     <p><strong>Order Time:</strong> {selectedOrder.orderTime ? new Date(selectedOrder.orderTime).toLocaleString() : 'Unknown'}</p>
                                     <p><strong>Total:</strong> ₹{isNaN(selectedOrder.total) ? 0 : selectedOrder.total}</p>
-                                    <p><strong>Status:</strong> {selectedOrder.status || (selectedOrder.pending ? 'Pending' : 'Completed')}</p>
+                                    <p><strong>Status:</strong> {getEffectiveOrderStatus(selectedOrder) === 'delivering'
+                                        ? 'On the way'
+                                        : getEffectiveOrderStatus(selectedOrder) === 'completed'
+                                        ? 'Delivered'
+                                        : getEffectiveOrderStatus(selectedOrder) === 'cancelled'
+                                        ? 'Cancelled'
+                                        : 'Pending'}</p>
                                 </div>
                                 <div className="order-items">
                                     <h3>Items:</h3>
@@ -781,7 +722,7 @@ const RestaurantManagement = () => {
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h2>Edit Cover Photo</h2>
-                                <button className="close-btn" onClick={() => setShowCoverPhotoForm(false)}>×</button>
+                                <button className="close-btn" onClick={() => setShowCoverPhotoForm(false)}><X size={20} /></button>
                             </div>
                             <div className="modal-body">
                                 <div className="cover-photo-form">
@@ -823,7 +764,7 @@ const RestaurantManagement = () => {
                         <div className="modal-content map-modal" onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h2>Delivery Route - Order #{selectedOrderForMap.id}</h2>
-                                <button className="close-btn" onClick={() => setShowOrderMap(false)}>×</button>
+                                <button className="close-btn" onClick={() => setShowOrderMap(false)}><X size={20} /></button>
                             </div>
                             <div className="modal-body">
                                 <OrderMap

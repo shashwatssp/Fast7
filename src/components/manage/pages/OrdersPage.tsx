@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import { Order } from '../../../types/Order';
+import { getEffectiveOrderStatus, ORDER_STATUS_LABEL } from '../../../utils/orderStatus';
 import { useAuth } from '../../../auth/AuthContext';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
@@ -40,21 +41,31 @@ const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     if (!restaurantData?.id) {
-      navigate('/restaurant-onboarding');
+      navigate('/onboarding');
       return;
     }
     const ordersRef = collection(db, 'orders');
     const q = query(
       ordersRef,
-      where("restaurantId", "==", restaurantData.id),
-      orderBy("createdAt", "desc")
+      where("restaurantId", "==", restaurantData.id)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Order[];
+      // Keep the Firestore doc id (docId) AND the business order id (`id`:
+      // e.g. ORD-...) separate so status updates always target the right doc.
+      const uniqueOrders = new Map<string, Order & { docId: string }>();
+      snapshot.docs.forEach(orderDoc => {
+        const data = orderDoc.data() as Order;
+        const order = { ...data, docId: orderDoc.id, id: data.id || orderDoc.id };
+        const previous = uniqueOrders.get(order.id);
+        if (!previous || (order.updatedAt?.toMillis?.() || 0) >= (previous.updatedAt?.toMillis?.() || 0)) {
+          uniqueOrders.set(order.id, order);
+        }
+      });
+      const ordersData = Array.from(uniqueOrders.values()).sort((a, b) =>
+        (b.createdAt?.toMillis?.() || Date.parse(b.orderTime || '') || 0) -
+        (a.createdAt?.toMillis?.() || Date.parse(a.orderTime || '') || 0)
+      );
 
       setOrders(ordersData);
       calculateStats(ordersData);
@@ -84,7 +95,9 @@ const OrdersPage: React.FC = () => {
     };
 
     ordersData.forEach(order => {
-      switch (order.status) {
+      // Resolve ONE authoritative status per order (legacy `pending` flag
+      // must never contradict the `status` field)
+      switch (getEffectiveOrderStatus(order)) {
         case 'pending':
           newStats.pending++;
           break;
@@ -99,7 +112,7 @@ const OrdersPage: React.FC = () => {
           break;
       }
       
-      if (order.total && !isNaN(order.total) && order.status !== 'cancelled') {
+      if (order.total && !isNaN(order.total) && getEffectiveOrderStatus(order) !== 'cancelled') {
         newStats.revenue += order.total;
       }
     });
@@ -110,9 +123,9 @@ const OrdersPage: React.FC = () => {
   const filterOrders = React.useCallback(() => {
     let filtered = [...orders];
 
-    // Status filter
+    // Status filter (against the ONE resolved status per order)
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(order => order.status === statusFilter);
+      filtered = filtered.filter(order => getEffectiveOrderStatus(order) === statusFilter);
     }
 
     // Search filter
@@ -136,12 +149,14 @@ const OrdersPage: React.FC = () => {
         switch (dateFilter) {
           case 'today':
             return orderDate >= today;
-          case 'week':
+          case 'week': {
             const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
             return orderDate >= weekAgo;
-          case 'month':
+          }
+          case 'month': {
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             return orderDate >= monthAgo;
+          }
           default:
             return true;
         }
@@ -151,11 +166,14 @@ const OrdersPage: React.FC = () => {
     setFilteredOrders(filtered);
   }, [orders, statusFilter, searchTerm, dateFilter]);
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (docId: string, newStatus: string) => {
     try {
-      const orderRef = doc(db, 'orders', orderId);
+      const orderRef = doc(db, 'orders', docId);
       await updateDoc(orderRef, { 
         status: newStatus,
+        // Keep the legacy flag in sync so the order can never read as
+        // pending AND delivering/delivered at the same time
+        pending: false,
         updatedAt: new Date()
       });
     } catch (error) {
@@ -174,13 +192,7 @@ const OrdersPage: React.FC = () => {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Pending';
-      case 'delivering': return 'Out for Delivery';
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
-    }
+    return ORDER_STATUS_LABEL[status as Order['status']] || status;
   };
 
   const formatPrice = (price: number) => {
@@ -188,7 +200,7 @@ const OrdersPage: React.FC = () => {
     return `₹${price.toFixed(2)}`;
   };
 
-  const formatDate = (date: any) => {
+  const formatDate = (date: Order['createdAt']) => {
     if (!date) return 'N/A';
     const dateObj = date.toDate ? date.toDate() : new Date(date);
     return dateObj.toLocaleString();
@@ -241,6 +253,12 @@ const OrdersPage: React.FC = () => {
               value={stats.delivering}
               subtitle="Out for delivery"
               color="info"
+            />
+            <StatsCard
+              title="Completed"
+              value={stats.completed}
+              subtitle="Delivered orders"
+              color="success"
             />
             <StatsCard
               title="Revenue"
@@ -314,9 +332,9 @@ const OrdersPage: React.FC = () => {
                       <div className="order-status">
                         <span 
                           className="status-badge"
-                          style={{ backgroundColor: getStatusColor(order.status) }}
+                          style={{ backgroundColor: getStatusColor(getEffectiveOrderStatus(order)) }}
                         >
-                          {getStatusText(order.status)}
+                          {getStatusText(getEffectiveOrderStatus(order))}
                         </span>
                       </div>
                     </div>
@@ -349,19 +367,19 @@ const OrdersPage: React.FC = () => {
                         View Details
                       </button>
                       
-                      {order.status === 'pending' && (
+                      {getEffectiveOrderStatus(order) === 'pending' && (
                         <button
                           className="action-btn confirm-btn"
-                          onClick={() => updateOrderStatus(order.id, 'delivering')}
+                          onClick={() => updateOrderStatus((order as Order & { docId: string }).docId, 'delivering')}
                         >
                           Start Delivery
                         </button>
                       )}
                       
-                      {order.status === 'delivering' && (
+                      {getEffectiveOrderStatus(order) === 'delivering' && (
                         <button
                           className="action-btn complete-btn"
-                          onClick={() => updateOrderStatus(order.id, 'completed')}
+                          onClick={() => updateOrderStatus((order as Order & { docId: string }).docId, 'completed')}
                         >
                           Complete Order
                         </button>
@@ -402,9 +420,9 @@ const OrdersPage: React.FC = () => {
                   <span>Status:</span>
                   <span 
                     className="status-badge"
-                    style={{ backgroundColor: getStatusColor(selectedOrder.status) }}
+                    style={{ backgroundColor: getStatusColor(getEffectiveOrderStatus(selectedOrder)) }}
                   >
-                    {getStatusText(selectedOrder.status)}
+                    {getStatusText(getEffectiveOrderStatus(selectedOrder))}
                   </span>
                 </div>
                 <div className="summary-row">

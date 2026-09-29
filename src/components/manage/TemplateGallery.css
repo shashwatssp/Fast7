@@ -1,0 +1,458 @@
+/* ============================================================
+   Template Gallery — browse, preview, apply
+   ============================================================ */
+
+.tg-page {
+  --tg-ink: #241a14;
+  --tg-ink-soft: #6f6055;
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 480px at 90% -10%, rgba(255, 122, 61, 0.08), transparent 60%),
+    #faf6f0;
+  color: var(--tg-ink);
+  font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tg-header {
+  border-bottom: 1px solid rgba(41, 26, 16, 0.07);
+  background: rgba(250, 246, 240, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.tg-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.tg-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: rgba(41, 26, 16, 0.06);
+  color: #6f6055;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+}
+
+.tg-back:hover {
+  background: rgba(41, 26, 16, 0.12);
+  color: #241a14;
+}
+
+.tg-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  font-weight: 700;
+  margin: 0 0 0.3rem;
+}
+
+.tg-title svg {
+  color: #e8402e;
+}
+
+.tg-sub {
+  color: var(--tg-ink-soft);
+  font-size: 0.92rem;
+  max-width: 560px;
+}
+
+.tg-current-chip,
+.tg-loading-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tg-current-chip {
+  background: #e9f7ec;
+  border: 1px solid rgba(24, 160, 88, 0.3);
+  color: #116a3d;
+}
+
+.tg-loading-chip {
+  background: #fff;
+  border: 1px solid rgba(41, 26, 16, 0.1);
+  color: #6f6055;
+}
+
+.tg-spin {
+  animation: tg-spin 1s linear infinite;
+}
+
+@keyframes tg-spin {
+  to { transform: rotate(360deg); }
+}
+
+.tg-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.tg-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .tg-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .tg-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Card */
+.tg-card {
+  background: #fff;
+  border: 1px solid rgba(41, 26, 16, 0.07);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(41, 21, 10, 0.06), 0 2px 10px rgba(41, 21, 10, 0.05);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tg-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 4px 14px rgba(41, 21, 10, 0.08), 0 14px 34px rgba(41, 21, 10, 0.12);
+}
+
+.tg-card.is-current {
+  border-color: rgba(24, 160, 88, 0.45);
+  box-shadow: 0 0 0 3px rgba(24, 160, 88, 0.12), 0 2px 10px rgba(41, 21, 10, 0.05);
+}
+
+/* Mini storefront mock */
+.tg-mini {
+  --m-bg: #faf6f0;
+  --m-surface: #ffffff;
+  --m-ink: rgba(30, 20, 12, 0.85);
+  height: 150px;
+  padding: 0.9rem 1rem;
+  background: var(--m-bg);
+  border-bottom: 1px solid rgba(41, 26, 16, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.tg-mini-hero {
+  flex: 1;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  background:
+    radial-gradient(200px 70px at 85% 0%, rgba(255, 255, 255, 0.25), transparent 65%),
+    linear-gradient(135deg, var(--m-g1, #ff7a3d), var(--m-g2, #d42b22));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.tg-mini-pill {
+  width: 3rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.tg-mini-title {
+  width: 60%;
+  height: 0.7rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.tg-mini-cta {
+  width: 4.2rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  margin-top: 0.2rem;
+}
+
+.tg-mini-cards {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tg-mini-cards span {
+  flex: 1;
+  height: 2.2rem;
+  border-radius: 9px;
+  background: var(--m-surface);
+  border: 1px solid rgba(41, 26, 16, 0.08);
+}
+
+/* Per-template mini themes */
+.tg-mini.tpl-ember   { --m-bg: #faf6f0; --m-g1: #ff7a3d; --m-g2: #d42b22; }
+.tg-mini.tpl-verdant { --m-bg: #f5faf3; --m-g1: #4ade80; --m-g2: #15803d; }
+.tg-mini.tpl-midnight {
+  --m-bg: #14100c;
+  --m-g1: #f6dc9b;
+  --m-g2: #b8860b;
+  --m-surface: #241b14;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.tg-mini.tpl-midnight .tg-mini-cards span { border-color: rgba(255, 255, 255, 0.1); }
+.tg-mini.tpl-coastal { --m-bg: #f3f9fd; --m-g1: #38bdf8; --m-g2: #0369a1; }
+.tg-mini.tpl-royal   { --m-bg: #faf8fd; --m-g1: #a78bfa; --m-g2: #6d28d9; }
+.tg-mini.tpl-saffron { --m-bg: #fdf8ef; --m-g1: #fbbf24; --m-g2: #ea580c; }
+
+/* Card body */
+.tg-card-body {
+  padding: 1.15rem 1.25rem 1.3rem;
+}
+
+.tg-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.tg-card-head h2 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tg-current-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #116a3d;
+  background: #e9f7ec;
+  border: 1px solid rgba(24, 160, 88, 0.3);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+
+.tg-tagline {
+  color: var(--tg-ink-soft);
+  font-size: 0.86rem;
+  margin-bottom: 1.1rem;
+  min-height: 2.6em;
+}
+
+.tg-card-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tg-preview-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1.5px solid rgba(41, 26, 16, 0.15);
+  border-radius: 12px;
+  background: #fff;
+  color: #241a14;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.2s;
+}
+
+.tg-preview-btn:hover {
+  border-color: #241a14;
+  transform: translateY(-1px);
+}
+
+.tg-apply-btn {
+  flex: 1.4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff7a3d 0%, #e8402e 55%, #d42b22 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  box-shadow: 0 8px 20px rgba(232, 64, 46, 0.35);
+  transition: all 0.2s;
+}
+
+.tg-apply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(232, 64, 46, 0.45);
+}
+
+.tg-apply-btn:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+/* Full preview modal */
+.tg-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 10, 5, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: tg-fade 0.25s ease-out;
+}
+
+@keyframes tg-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tg-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.25rem;
+  background: #211612;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.tg-preview-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tg-preview-meta strong {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.15rem;
+}
+
+.tg-preview-meta span {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+}
+
+.tg-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tg-preview-actions .tg-apply-btn {
+  flex: 0 0 auto;
+}
+
+.tg-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.tg-close-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: rotate(90deg);
+}
+
+.tg-preview-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 640px) {
+  .tg-header-inner,
+  .tg-main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .tg-title {
+    font-size: 1.5rem;
+  }
+
+  .tg-header-inner > div,
+  .tg-card,
+  .tg-preview-meta {
+    min-width: 0;
+  }
+
+  .tg-card-actions {
+    flex-wrap: wrap;
+  }
+
+  .tg-preview-btn,
+  .tg-card-actions .tg-apply-btn {
+    flex: 1 1 100%;
+  }
+
+  .tg-preview-bar {
+    padding: 0.65rem 1rem;
+    align-items: flex-start;
+  }
+
+  .tg-preview-meta span {
+    display: none;
+  }
+
+  .tg-preview-actions {
+    flex-shrink: 0;
+  }
+
+  .tg-preview-actions .tg-apply-btn {
+    font-size: 0.75rem;
+    padding: 0.55rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .tg-preview-meta strong {
+    font-size: 0.9rem;
+  }
+
+  .tg-preview-actions .tg-apply-btn {
+    max-width: 120px;
+  }
+}

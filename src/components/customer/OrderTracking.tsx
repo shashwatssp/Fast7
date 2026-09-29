@@ -206,6 +206,13 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
 
         // Update delivery status based on order status
         updateDeliveryStatus(orderData.status);
+
+        // Guard against the status contradiction: once the order is
+        // delivered (completed) or cancelled, it must NEVER fall back to
+        // "on the way" via the simulated tracking animation.
+        if (orderData.status === 'completed' || orderData.status === 'cancelled') {
+          deliveryTrackingService.stopTracking(orderId);
+        }
       }
     }, (err) => {
       console.error('Error listening to order updates:', err);
@@ -305,6 +312,16 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
   // Start live tracking using the delivery tracking service
 useEffect(() => {
   if (!order || !customerLocation || !restaurantLocation) return;
+
+  // Delivered/cancelled orders are final — never simulate movement for them
+  if (order.status === 'completed' || order.status === 'cancelled') {
+    updateDeliveryStatus(order.status);
+    if (order.status === 'completed') {
+      setDistanceRemaining(0);
+      setEtaMinutes(0);
+    }
+    return;
+  }
 
   // Convert order data to the format expected by the tracking service
   const orderForTracking = {
