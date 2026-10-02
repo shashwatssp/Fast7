@@ -31,6 +31,9 @@
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   background:
@@ -42,6 +45,43 @@
   text-align: left;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.restaurant-page,
+.restaurant-page * {
+  box-sizing: border-box;
+}
+
+.restaurant-page img,
+.restaurant-page svg {
+  max-width: 100%;
+}
+
+.header-content,
+.restaurant-main,
+.menu-container,
+.menu-items-container,
+.menu-item,
+.item-details,
+.item-header,
+.item-header h3,
+.restaurant-contact,
+.contact-chip,
+.cart-content,
+.footer-content,
+.footer-section {
+  min-width: 0;
+}
+
+.restaurant-header h1,
+.restaurant-bio,
+.contact-chip,
+.item-header h3,
+.item-description,
+.footer-section p,
+.cart-item-price,
+.order-id {
+  overflow-wrap: anywhere;
 }
 
 .restaurant-page h1,
@@ -207,7 +247,7 @@ body:has(.restaurant-page) {
 }
 
 .restaurant-header h1 {
-  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-size: clamp(2rem, 6vw, 4.2rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
@@ -231,6 +271,7 @@ body:has(.restaurant-page) {
   align-items: center;
   gap: 0.45rem;
   max-width: 100%;
+  white-space: normal;
   padding: 0.5rem 1rem;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.35);
@@ -496,7 +537,7 @@ a.contact-chip:hover {
 
 .menu-items-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.4rem;
 }
 
@@ -583,6 +624,7 @@ a.contact-chip:hover {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--ink);
+  min-width: 0;
 }
 
 .item-price {
@@ -776,6 +818,7 @@ a.contact-chip:hover {
   z-index: 1;
   width: 100%;
   max-width: 460px;
+  min-width: 0;
   height: 100%;
   background: var(--cream);
   display: flex;
@@ -910,6 +953,7 @@ a.contact-chip:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .quantity-controls {
@@ -1299,7 +1343,7 @@ a.contact-chip:hover {
 
 .footer-content {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2.25rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -1386,7 +1430,7 @@ a.contact-chip:hover {
   }
 
   .menu-items-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cart-content {
@@ -1396,13 +1440,75 @@ a.contact-chip:hover {
 
 @media (min-width: 768px) {
   .footer-content {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1024px) {
   .menu-items-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Phones — must stay AFTER the base rules above so these win */
+@media (max-width: 480px) {
+  .header-content {
+    padding: 4rem 1rem 2.5rem;
+  }
+
+  .restaurant-main {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .restaurant-header h1 {
+    font-size: clamp(1.85rem, 9vw, 2.4rem);
+  }
+
+  .contact-chip {
+    max-width: 100%;
+  }
+
+  .menu-heading {
+    padding-top: 1.75rem;
+  }
+
+  .item-header {
+    flex-wrap: wrap;
+  }
+
+  .cart-button {
+    right: 1rem;
+    bottom: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .cart-item {
+    flex-wrap: wrap;
+  }
+
+  .cart-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .cart-header,
+  .cart-items,
+  .cart-total,
+  .checkout-form-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .checkout-actions {
+    flex-wrap: wrap;
+  }
+
+  .checkout-actions > button {
+    flex: 1 1 100%;
+  }
+
+  .restaurant-footer {
+    padding: 2.5rem 1rem 1.5rem;
   }
 }
 
