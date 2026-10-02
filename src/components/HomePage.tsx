@@ -107,7 +107,7 @@ const HomePage = () => {
             <h1>Launch Your Restaurant Online in <em>7 Minutes</em></h1>
             <p className="home-hero-sub">
               Create a stunning website for your restaurant in under 7 minutes and start
-              taking orders today. No coding required — pick a template, add your menu, go live.
+              taking orders today. No coding required. Pick a template, add your menu, go live.
             </p>
             <div className="home-hero-actions">
               <button className="home-google-btn home-google-btn--lg" onClick={handleGoogleSignIn}>
