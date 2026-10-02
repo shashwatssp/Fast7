@@ -65,7 +65,7 @@ const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     if (!restaurantData?.id) {
-      navigate('/restaurant-onboarding');
+      navigate('/onboarding');
       return;
     }
 

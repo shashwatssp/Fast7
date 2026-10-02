@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { olaMapsService, RoutePoint } from '../../utils/olaMapsService';
 import { deliveryTrackingService, TrackingUpdate, DeliveryLocation } from '../../utils/deliveryTrackingService';
 import { notificationService } from '../../utils/notificationService';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './OrderTracking.css';
 
@@ -123,6 +123,11 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const arrivalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Firestore doc id for this order and a one-shot flag so the simulated
+  // delivery completion is written to Firestore exactly once.
+  const orderDocIdRef = useRef<string | null>(null);
+  const deliveryCompletedRef = useRef(false);
+
   // Refs to avoid stale closures in tracking callback
   const currentStatusRef = useRef(currentStatus);
   const showArrivalNotificationRef = useRef(showArrivalNotification);
@@ -184,6 +189,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
       if (!snapshot.empty) {
         const orderDoc = snapshot.docs[0];
         const orderData = { id: orderDoc.id, ...orderDoc.data() } as OrderData;
+        orderDocIdRef.current = orderDoc.id;
         setOrder(orderData);
 
         // Set customer location
@@ -206,6 +212,13 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
 
         // Update delivery status based on order status
         updateDeliveryStatus(orderData.status);
+
+        // Guard against the status contradiction: once the order is
+        // delivered (completed) or cancelled, it must NEVER fall back to
+        // "on the way" via the simulated tracking animation.
+        if (orderData.status === 'completed' || orderData.status === 'cancelled') {
+          deliveryTrackingService.stopTracking(orderId);
+        }
       }
     }, (err) => {
       console.error('Error listening to order updates:', err);
@@ -236,6 +249,13 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
           timestamp: now
         };
         break;
+      case 'ready':
+        newStatus = {
+          status: 'picked_up',
+          message: '📦 Your order has been picked up',
+          timestamp: now
+        };
+        break;
       case 'delivering':
         newStatus = {
           status: 'on_the_way',
@@ -243,6 +263,8 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
           timestamp: now
         };
         break;
+      // The simulation reports 'delivered'; Firestore uses 'completed'
+      case 'delivered':
       case 'completed':
         newStatus = {
           status: 'delivered',
@@ -264,6 +286,41 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
     if (status === 'completed') {
       setShowArrivalNotification(true);
       setTimeout(() => setShowArrivalNotification(false), 5000);
+    }
+  };
+
+  // Record the delivery in Firestore when the tracking simulation reaches
+  // the customer, so the dashboard's "Delivered" count matches what the
+  // customer sees. Transaction-guarded: ONLY a 'delivering' order can
+  // transition to 'completed' — pending, cancelled or already-completed
+  // orders are never touched by the simulation.
+  const completeOrderDelivery = async () => {
+    const docId = orderDocIdRef.current;
+    if (!docId || deliveryCompletedRef.current) return;
+    deliveryCompletedRef.current = true;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const orderRef = doc(db, 'orders', docId);
+        const snapshot = await transaction.get(orderRef);
+        if (!snapshot.exists()) return;
+        const data = snapshot.data();
+        if (data?.status !== 'delivering') return;
+        const createdAtMillis = data?.createdAt?.toMillis?.() || 0;
+        const deliveryMinutes = createdAtMillis
+          ? Math.max(1, Math.round((Date.now() - createdAtMillis) / 60000))
+          : undefined;
+        transaction.update(orderRef, {
+          status: 'completed',
+          // Keep the legacy flag in sync — one status per order, always
+          pending: false,
+          ...(deliveryMinutes ? { actualDeliveryTime: deliveryMinutes } : {}),
+          updatedAt: serverTimestamp(),
+        });
+      });
+    } catch (err) {
+      // Allow a retry if the write failed
+      deliveryCompletedRef.current = false;
+      console.error('Error recording delivery completion:', err);
     }
   };
 
@@ -306,6 +363,16 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
 useEffect(() => {
   if (!order || !customerLocation || !restaurantLocation) return;
 
+  // Delivered/cancelled orders are final — never simulate movement for them
+  if (order.status === 'completed' || order.status === 'cancelled') {
+    updateDeliveryStatus(order.status);
+    if (order.status === 'completed') {
+      setDistanceRemaining(0);
+      setEtaMinutes(0);
+    }
+    return;
+  }
+
   // Convert order data to the format expected by the tracking service
   const orderForTracking = {
     id: order.id,
@@ -338,6 +405,12 @@ useEffect(() => {
     
     // Update delivery status based on tracking status
     updateDeliveryStatus(update.status);
+    
+    // Persist the delivery when the simulation reaches the customer so the
+    // dashboard reflects it (fixes orders stuck on "ON THE WAY" forever).
+    if (update.status === 'delivered') {
+      completeOrderDelivery();
+    }
     
     // Show browser notifications for status changes
     if (update.status !== currentStatusRef.current) {

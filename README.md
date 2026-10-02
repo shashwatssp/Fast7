@@ -23,6 +23,7 @@
 - [📱 User Guides](#-user-guides)
 - [🔧 Configuration](#-configuration)
 - [🌐 Deployment](#-deployment)
+- [🔍 SEO Optimization](#-seo-optimization)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
@@ -94,6 +95,67 @@
 - **Customer Insights**: Order pattern analysis
 - **Real-time Metrics**: Live dashboard updates
 
+### 🎨 Website Templates & Themes
+- **6 Designer Themes**: `ember`, `verdant`, `midnight`, `coastal`, `royal`, and `saffron` — each a complete look for a storefront
+- **Template Gallery**: browse all themes at `/templates` (or `/manage/templates` from the dashboard) with live previews rendered from sample data
+- **One-Click Apply**: switch a website's theme from the dashboard — the change applies instantly to the live site
+- **Template-Aware Rendering**: restaurant pages render per-theme colors, typography, and layout via CSS variants
+
+### 🏪 Multi-Website Management
+- **Multiple Websites per Account**: create and manage any number of restaurant websites from one login
+- **Website Switcher**: the dashboard header lets you switch the active website when you own more than one
+- **Active Website Persistence**: the last active website is remembered across sessions
+- **New Website Button**: create additional websites directly from the dashboard
+
+### 🩺 Order Status Consistency
+- **Single Source of Truth**: `getEffectiveOrderStatus()` resolves exactly one authoritative status per order — an order can never read as "pending" and "delivered" at the same time
+- **Legacy Flag Sync**: the older boolean `pending` field is kept in sync on every status write
+- **Automatic Delivery Completion**: when a customer's tracking page reaches the destination, the delivery is recorded through a race-safe transaction (`delivering → completed` only), so dashboards always match what customers see
+
+---
+
+## 🔍 SEO Optimization
+
+Fast7 restaurant websites are fully crawlable — including for crawlers that never run JavaScript.
+
+### The challenge
+
+Fast7 is a client-rendered React SPA. Modern search engines can execute JavaScript, but **social crawlers (Facebook, WhatsApp, X, iMessage) do not** — without server-side help they only ever saw the generic `index.html` defaults when a restaurant link was shared.
+
+### The solution — Netlify Edge Function (free tier)
+
+`netlify/edge-functions/seo.ts` runs at the CDN edge on every request and provides:
+
+#### 1. Per-restaurant meta injection
+When a restaurant page is served (`/{domain}` or the restaurant's own subdomain), the function replaces the sentinel-wrapped block in `index.html` (`<!-- fast7:seo --> … <!-- /fast7:seo -->`) with restaurant-specific tags:
+- `<title>` and `<meta name="description">` from the restaurant's Firestore profile
+- Open Graph tags (`og:title`, `og:description`, `og:type: restaurant.restaurant`, `og:url`, `og:image` from the cover photo)
+- Twitter card tags (`summary_large_image`)
+- `<link rel="canonical">` pointing at `/{domain}`
+- `Restaurant` JSON-LD structured data (schema.org) with name, description, address, phone, and email — enabling rich results
+
+Restaurant data is read through the Firestore REST API using the same public web API key the client app already uses, with a 60-second in-memory cache to keep edge requests fast and infrequent.
+
+#### 2. Dynamic sitemap.xml
+`/sitemap.xml` is generated at the edge: it lists the homepage and every live restaurant website, discovered from the `restaurants` collection (reserved routes like `/manage` are excluded). Cached for 60 seconds.
+
+#### 3. robots.txt with Sitemap line
+The static `robots.txt` is served as-is, with a `Sitemap: {origin}/sitemap.xml` line appended — using the correct absolute URL for whichever host the request came from.
+
+### Safety guarantees (nothing can break)
+
+| Guarantee | How |
+|---|---|
+| Site never breaks due to SEO | Every failure path returns the original downstream response untouched |
+| No non-HTML damage | Only `GET` responses with `content-type: text/html` are ever modified — JS, CSS, images, and APIs pass through unread |
+| Private routes stay private | `/manage`, `/onboarding`, `/track`, and other reserved routes never receive injected meta |
+| No new credentials | Uses the same public Firebase web key already shipped in the client bundle |
+| Sentinel fallback | If the sentinel block is missing, tags are inserted before `</head>` instead |
+
+### Client-side SEO (as before)
+
+On top of the server-side layer, `RestaurantPage.tsx` still manages runtime meta for browser sessions (title, description, OG tags, canonical, JSON-LD), and the static `index.html` block gives the landing page proper search/social defaults.
+
 ---
 
 ## 🏗️ Architecture
@@ -112,6 +174,7 @@
   - Firebase Authentication - User management
   - Firebase Hosting - Deployment platform
 - **Netlify Functions** - Serverless functions for API proxy
+- **Netlify Edge Functions** - CDN-edge runtime for server-side SEO (per-restaurant meta, sitemap, robots.txt)
 - **Ola Maps API** - Professional mapping and routing services
 
 #### Maps & Visualization
@@ -137,7 +200,8 @@ src/
 │   │   │   ├── OrdersPage.tsx
 │   │   │   ├── MenuPage.tsx
 │   │   │   └── SettingsPage.tsx
-│   │   ├── shared/            # Shared components
+│   │   ├── shared/            # Shared components (incl. PageHeader w/ switcher)
+│   │   ├── TemplateGallery.tsx    # Theme gallery with live preview
 │   │   └── RestaurantManagement.tsx
 │   ├── customer/              # Customer-facing components
 │   │   ├── OrderTracking.tsx
@@ -146,6 +210,7 @@ src/
 │   │   └── DeliveryTracking.tsx
 │   ├── website/               # Restaurant website components
 │   │   ├── RestaurantPage.tsx
+│   │   ├── templates.ts       # Designer theme definitions + sample data
 │   │   └── LocationPicker.tsx
 │   ├── RestaurantOnboarding.tsx
 │   ├── MenuSelectionStep.tsx
@@ -154,13 +219,21 @@ src/
 │   ├── olaMapsService.ts      # Maps integration
 │   ├── notificationService.ts # Notification management
 │   ├── deliveryTrackingService.ts
+│   ├── orderStatus.ts         # Single source of truth for order status
 │   └── cloudinary.ts          # Media management
 ├── types/                     # TypeScript type definitions
 │   ├── Order.ts
 │   └── Menu.ts
 ├── auth/                      # Authentication context
-│   └── AuthContext.tsx
+│   └── AuthContext.tsx        # Multi-website auth + active restaurant
 └── firebase.ts                # Firebase configuration
+
+netlify/
+├── edge-functions/seo.ts      # Server-side SEO (meta injection, sitemap, robots)
+└── functions/ola-maps-proxy.cjs  # Maps API proxy
+
+public/
+└── robots.txt                 # Crawler rules + Sitemap line (edge-injected)
 ```
 
 ---
@@ -438,6 +511,12 @@ Create `netlify.toml`:
 [functions]
   directory = "netlify/functions"
 ```
+
+> **Edge functions**: the SEO edge function in `netlify/edge-functions/` is
+> detected and deployed automatically — no extra configuration is required,
+> and it runs on the Netlify free plan. Optionally set a `FIREBASE_API_KEY`
+> environment variable; when unset it falls back to the public web key
+> already used by the client app.
 
 #### 3. Environment Variables
 

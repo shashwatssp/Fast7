@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Store } from 'lucide-react';
+import { useAuth } from '../../../auth/AuthContext';
 import './PageHeader.css';
 
 interface PageHeaderProps {
@@ -16,6 +18,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   backTo = '/manage'
 }) => {
   const navigate = useNavigate();
+  const { restaurants, activeRestaurantId, setActiveRestaurantId } = useAuth();
 
   const handleBack = () => {
     navigate(backTo);
@@ -35,6 +38,22 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           <h1 className="page-title">{title}</h1>
           {subtitle && <p className="page-subtitle">{subtitle}</p>}
         </div>
+        {restaurants.length > 1 && (
+          <label className="website-switcher page-header-switcher">
+            <Store size={16} />
+            <select
+              value={activeRestaurantId || ""}
+              onChange={(e) => setActiveRestaurantId(e.target.value)}
+              aria-label="Switch website"
+            >
+              {restaurants.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.restaurantInfo?.name || r.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
     </div>
   );

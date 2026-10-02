@@ -407,7 +407,7 @@ const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) =>
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <span className="search-icon">🔍</span>
+                <span className="menu-search-icon">🔍</span>
             </div>
 
             <div className="menu-content">

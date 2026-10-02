@@ -1,0 +1,9 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Block the customer dashboard and utility routes from being indexed
+Disallow: /manage
+Disallow: /onboarding
+Disallow: /track
+Disallow: /tracking-demo

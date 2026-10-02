@@ -12,6 +12,7 @@ import DashboardPage from './components/manage/pages/DashboardPage';
 import OrdersPage from './components/manage/pages/OrdersPage';
 import MenuPage from './components/manage/pages/MenuPage';
 import SettingsPage from './components/manage/pages/SettingsPage';
+import TemplateGallery from './components/manage/TemplateGallery';
 
 // AppRoutes component that uses the auth context
 const AppRoutes: React.FC = () => {
@@ -67,6 +68,14 @@ const AppRoutes: React.FC = () => {
         <Route
           path="/manage/settings"
           element={currentUser ? <SettingsPage /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/manage/templates"
+          element={currentUser ? <TemplateGallery showBackLink /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/templates"
+          element={<TemplateGallery />}
         />
         {isSubdomain && subdomain !== "localhost" && subdomain !== "192" && subdomain !== "Fast7" ? (
           <Route

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './RestaurantOnboarding.css';
 import MenuSelectionStep from './MenuSelectionStep';
 import { db } from '../firebase';
@@ -16,7 +17,8 @@ interface MenuSelections {
 
 const RestaurantOnboarding = () => {
     const [orderingEnabled, setOrderingEnabled] = useState(true);
-    const { currentUser } = useAuth();
+    const { currentUser, refreshRestaurantData } = useAuth();
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [domainName, setDomainName] = useState('');
     const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
@@ -113,8 +115,12 @@ const RestaurantOnboarding = () => {
 
             console.log("Website created successfully with data:", restaurantData);
 
-            // Set website URL and show success popup
-            setNewWebsiteUrl(`https://fast7.netlify.app/${domainName}`);
+            // Make the new website the active one in the dashboard
+            localStorage.setItem('fast7:activeRestaurant', domainPrefix);
+            await refreshRestaurantData();
+
+            // Set website URL and show success popup (works in dev and prod)
+            setNewWebsiteUrl(`${window.location.origin}/${domainName}`);
             setShowSuccessPopup(true);
 
         } catch (error) {
@@ -155,13 +161,13 @@ const RestaurantOnboarding = () => {
                         </div>
                         <button
                             className="visit-website-btn"
-                            onClick={() => window.location.href = newWebsiteUrl}
+                            onClick={() => window.open(newWebsiteUrl, '_blank', 'noopener')}
                         >
                             Visit Your Website
                         </button>
                         <button
                             className="go-to-dashboard-btn"
-                            onClick={() => window.location.href = 'https://Fast7.netlify.app/manage'}
+                            onClick={() => navigate('/manage')}
                         >
                             Go to Dashboard
                         </button>

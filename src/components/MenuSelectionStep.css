@@ -23,7 +23,8 @@
     background-color: #f9f9f9; /* optional, just for visibility */
     padding: 20px;
     border-radius: 8px;
-    margin-left: -5%;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
 }
 
@@ -81,7 +82,9 @@
 
 .menu-search-input {
   width: 100%;
-  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+  /* Left padding must clear the absolutely-positioned 1.25rem icon at
+     left: 1rem (icon ends at ~2.25rem) so typed text never overlaps it */
+  padding: 0.5rem 0.5rem 0.5rem 2.75rem;
   border: none;
   border-radius: 12px;
   background: white;
@@ -95,7 +98,9 @@
   box-shadow: 0 4px 12px rgba(255, 90, 96, 0.15);
 }
 
-.search-icon {
+/* Named uniquely (menu-search-icon) so it can never collide with the
+   restaurant website's .search-icon (a different, flex-positioned icon). */
+.menu-search-icon {
   position: absolute;
   left: 1rem;
   top: 50%;
@@ -477,20 +482,20 @@
 
 
 
-@media (max-width: 10000px) {
-  .menu-content {
+@media (max-width: 767px) {
+  .menu-step-container .menu-content {
     grid-template-columns: 1fr;
   }
   
-  .category-sidebar {
+  .menu-step-container .category-sidebar {
     height: auto;
   }
   
-  .menu-items-container {
+  .menu-step-container .menu-items-container {
     height: auto;
   }
   
-  .menu-items-grid {
+  .menu-step-container .menu-items-grid {
     grid-template-columns: 1fr;
   }
 

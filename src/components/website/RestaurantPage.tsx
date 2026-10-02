@@ -7,9 +7,34 @@ import "./RestaurantPage.css"
 import { db } from "../../firebase"
 import LocationPicker from "./LocationPicker"
 import { RoutePoint } from "../../utils/olaMapsService"
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Search,
+  ChevronDown,
+  ShoppingBag,
+  Plus,
+  Minus,
+  X,
+  Bike,
+  ArrowDown,
+  Check,
+  Trash2,
+  Instagram,
+  Facebook,
+  Twitter,
+  UtensilsCrossed,
+  ChefHat,
+} from "lucide-react"
+
+// Inline SVG placeholder shown when a dish has no image or its image fails to load
+const FALLBACK_DISH_IMAGE =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='440'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fdeedd'/%3E%3Cstop offset='1' stop-color='%23f7c9ad'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='640' height='440' fill='url(%23g)'/%3E%3Ctext x='320' y='240' font-size='110' text-anchor='middle'%3E%F0%9F%8D%BD%EF%B8%8F%3C/text%3E%3C/svg%3E"
 
 
-interface MenuItem {
+export interface MenuItem {
   id: string | number
   name: string
   description?: string
@@ -21,7 +46,7 @@ interface CartItem extends MenuItem {
   quantity: number
 }
 
-interface Category {
+export interface Category {
   id: string | number
   name: string
   icon: string
@@ -42,12 +67,13 @@ interface RestaurantInfo {
   bio: string
 }
 
-interface RestaurantData {
+export interface RestaurantData {
   domainName: string
   menuSelections: MenuSelections
   restaurantInfo: RestaurantInfo
   orderingEnabled: boolean;
   coverPhoto?: string;
+  templateId?: string;
 }
 
 interface CustomerInfo {
@@ -57,11 +83,15 @@ interface CustomerInfo {
   coordinates?: RoutePoint
 }
 
-interface RestaurantPageProps {
+export interface RestaurantPageProps {
   subdomain?: string;
+  /** Force a specific template id (used by the template gallery preview) */
+  templateOverride?: string;
+  /** Render with provided data instead of fetching Firestore (used by the template gallery) */
+  previewData?: RestaurantData | null;
 }
 
-const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
+const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain, templateOverride, previewData }) => {
   const [restaurant, setRestaurant] = useState<RestaurantData | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -86,7 +116,81 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     return subdomain;
   }
 
+  // SEO: give each restaurant website its own title, description, OG tags,
+  // and schema.org structured data in the <head>.
   useEffect(() => {
+    if (previewData || !restaurant) return
+
+    const name = restaurant.restaurantInfo?.name
+    if (!name) return
+
+    const description =
+      restaurant.restaurantInfo?.bio ||
+      `Order delicious food online from ${name} — fresh ingredients, fast delivery.`
+    const canonicalPath = `/${subdomain || restaurant.domainName || ''}`
+    const canonicalUrl = `${window.location.origin}${canonicalPath}`
+
+    const prevTitle = document.title
+    document.title = `${name} — Order Food Online`
+
+    const setMeta = (attr: 'name' | 'property', key: string, content: string) => {
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        el.setAttribute(attr, key)
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+
+    setMeta('name', 'description', description)
+    setMeta('property', 'og:title', `${name} — Order Food Online`)
+    setMeta('property', 'og:description', description)
+    setMeta('property', 'og:type', 'restaurant.restaurant')
+    setMeta('property', 'og:url', canonicalUrl)
+    if (restaurant.coverPhoto) {
+      setMeta('property', 'og:image', restaurant.coverPhoto)
+    }
+
+    let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+    if (!canonical) {
+      canonical = document.createElement('link')
+      canonical.rel = 'canonical'
+      document.head.appendChild(canonical)
+    }
+    canonical.href = canonicalUrl
+
+    const ldJsonId = 'restaurant-structured-data'
+    let ldScript = document.getElementById(ldJsonId)
+    if (!ldScript) {
+      ldScript = document.createElement('script')
+      ldScript.id = ldJsonId
+      ldScript.type = 'application/ld+json'
+      document.head.appendChild(ldScript)
+    }
+    ldScript.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Restaurant',
+      name,
+      description,
+      url: canonicalUrl,
+      image: restaurant.coverPhoto || undefined,
+      telephone: restaurant.restaurantInfo?.phone || undefined,
+      email: restaurant.restaurantInfo?.email || undefined,
+      address: restaurant.restaurantInfo?.address
+        ? { '@type': 'PostalAddress', streetAddress: restaurant.restaurantInfo.address }
+        : undefined,
+      priceRange: '₹₹',
+    })
+
+    return () => {
+      document.title = prevTitle
+      document.getElementById(ldJsonId)?.remove()
+    }
+  }, [restaurant, previewData, subdomain])
+
+  useEffect(() => {
+    if (previewData) return
 
     let restaurantDomain = getSubdomainFromUrl();
 
@@ -154,7 +258,29 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     }
 
     fetchRestaurantData()
-  }, [subdomain])
+  }, [subdomain, previewData])
+
+  // When rendering with preview data (template gallery), build menu state directly
+  useEffect(() => {
+    if (!previewData) return
+
+    const allMenuItems: Record<string | number, MenuItem[]> = {}
+
+    for (const category of previewData.menuSelections?.standardCategories || []) {
+      allMenuItems[category.id] = previewData.menuSelections?.standardItems?.[category.id] || []
+    }
+    for (const category of previewData.menuSelections?.customCategories || []) {
+      allMenuItems[category.id] = previewData.menuSelections?.customItems?.[category.id] || []
+    }
+
+    setMenuItems(allMenuItems)
+
+    const firstId =
+      previewData.menuSelections?.standardCategories?.[0]?.id ??
+      previewData.menuSelections?.customCategories?.[0]?.id ??
+      null
+    setActiveCategory(firstId)
+  }, [previewData])
 
   useEffect(() => {
     if (activeCategory && menuItems[activeCategory]) {
@@ -269,7 +395,12 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
+    if (previewData) {
+      alert('This is a design preview — orders are disabled here.')
+      return
+    }
+
     console.log('🛒 handlePlaceOrder called with customerInfo:', customerInfo);
   
     // Validate that location is selected
@@ -365,7 +496,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
   }
 
 
-  if (loading) {
+  if (!previewData && loading) {
 
     return (
       <div className="restaurant-loading">
@@ -375,7 +506,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     )
   }
 
-  if (error) {
+  if (!previewData && error) {
     return (
       <div className="restaurant-error">
         <h2>Something went wrong</h2>
@@ -387,7 +518,9 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
 
 
 
-  if (!restaurant) {
+  const data = previewData ?? restaurant
+
+  if (!data) {
 
     return (
       <div className="restaurant-error">
@@ -397,41 +530,53 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
     )
   }
 
+  const templateId = templateOverride || data.templateId || 'ember'
+
   const allCategories = [
-    ...(restaurant.menuSelections?.standardCategories || []),
-    ...(restaurant.menuSelections?.customCategories || []),
+    ...(data.menuSelections?.standardCategories || []),
+    ...(data.menuSelections?.customCategories || []),
   ]
 
 
 
   return (
-    <div className="restaurant-page">
-<header 
-  className="restaurant-header" 
-  style={{
-    position: 'relative',
-    backgroundImage: `url(${restaurant.coverPhoto || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80'})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    filter: 'brightness(0.7)',
-  }}
->
-  <div className="header-content">
-  <h1>{restaurant.restaurantInfo.name}</h1>
-  <div className="header-divider"></div>
-  <p className="restaurant-bio">{restaurant.restaurantInfo.bio}</p>
-  <div className="restaurant-contact">
-    <span>📍 {restaurant.restaurantInfo.address}</span>
-    <span>📞 {restaurant.restaurantInfo.phone}</span>
-  </div>
-  </div>
-</header>
+    <div className={`restaurant-page tpl-${templateId}`}>
+      <header className="restaurant-header">
+        <div
+          className="header-backdrop"
+          style={{
+            backgroundImage: `url(${data.coverPhoto || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80'})`,
+          }}
+        />
+        <div className="header-content">
+          <div className="header-badges">
+            <span className="header-badge"><ChefHat size={15} /> Made Fresh to Order</span>
+            <span className="header-badge"><Bike size={15} /> Fast Delivery</span>
+          </div>
+          <h1>{data.restaurantInfo.name}</h1>
+          <p className="restaurant-bio">{data.restaurantInfo.bio}</p>
+          <div className="restaurant-contact">
+            <span className="contact-chip"><MapPin size={15} /> {data.restaurantInfo.address}</span>
+            <a className="contact-chip" href={`tel:${data.restaurantInfo.phone}`}>
+              <Phone size={15} /> {data.restaurantInfo.phone}
+            </a>
+          </div>
+          {data.orderingEnabled && (
+            <button
+              className="header-cta"
+              onClick={() => document.getElementById("menu-section")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Explore the Menu <ArrowDown size={16} />
+            </button>
+          )}
+        </div>
+      </header>
 
 
       <main className="restaurant-main">
         <div className="search-filter-container">
           <div className="search-container">
-            <span className="search-icon">🔍</span>
+            <Search size={17} className="search-icon" />
             <input
               type="text"
               placeholder="Search menu items..."
@@ -442,28 +587,35 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
           </div>
 
           <div className="filter-container">
-            <select value={priceFilter} onChange={handlePriceFilter} className="price-filter">
-              <option value="all">All Prices</option>
-              <option value="under50">Under ₹200</option>
-              <option value="50to100">₹200 - ₹400</option>
-              <option value="over100">Over ₹400</option>
-            </select>
+            <div className="select-wrap">
+              <select value={priceFilter} onChange={handlePriceFilter} className="price-filter">
+                <option value="all">All Prices</option>
+                <option value="under50">Under ₹200</option>
+                <option value="50to100">₹200 - ₹400</option>
+                <option value="over100">Over ₹400</option>
+              </select>
+              <ChevronDown size={16} className="select-chevron" />
+            </div>
           </div>
         </div>
 
         <div className="menu-container">
+          <div className="menu-heading" id="menu-section">
+            <p className="menu-eyebrow">Our Menu</p>
+            <h2>Explore What We&#39;ve Cooked Up</h2>
+          </div>
+
           <div className="menu-categories">
-            <h2>Menu Categories</h2>
             <div className="categories-list">
               {allCategories.map((category) => (
-                <div
+                <button
                   key={category.id}
                   className={`category-item ${activeCategory === category.id ? "active" : ""}`}
                   onClick={() => setActiveCategory(category.id)}
                 >
                   <span className="category-icon">{category.icon}</span>
                   <span className="category-name">{category.name}</span>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -471,19 +623,22 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
           <div className="menu-items-container">
             {filteredItems.length === 0 ? (
               <div className="no-items-message">
+                <UtensilsCrossed size={36} strokeWidth={1.5} />
                 <p>No items found in this category</p>
+                <p className="no-items-hint">Try a different category or clear your search.</p>
               </div>
             ) : (
               <div className="menu-items-grid">
                 {filteredItems.map((item) => (
-                  <div key={item.id} className="menu-item">
+                  <article key={item.id} className="menu-item">
                     <div className="item-image">
                       <img
-                        src={item.image || '/path/to/default-image.jpg'}
+                        src={item.image || FALLBACK_DISH_IMAGE}
                         alt={item.name}
                         className="menu-item-image"
+                        loading="lazy"
                         onError={(e) => {
-                          e.currentTarget.src = '/path/to/default-image.jpg';
+                          e.currentTarget.src = FALLBACK_DISH_IMAGE;
                         }}
                       />
                     </div>
@@ -493,13 +648,13 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                         <p className="item-price">₹{item.price}</p>
                       </div>
                       {item.description && <p className="item-description">{item.description}</p>}
-                      {restaurant.orderingEnabled && (
+                      {data.orderingEnabled && (
                         <button className="add-to-cart-btn" onClick={() => addToCart(item)}>
-                          Add to Cart
+                          <Plus size={16} /> Add to Cart
                         </button>
                       )}
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
@@ -507,9 +662,12 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         </div>
       </main>
 
-      {restaurant.orderingEnabled && (
+      {data.orderingEnabled && (
         <div className={`cart-button ${cart.length > 0 ? "has-items" : ""}`} onClick={toggleCart}>
-          <span className="cart-icon">🛒</span>
+          <ShoppingBag size={21} className="cart-icon" />
+          {cart.length > 0 && (
+            <span className="cart-total-hint">₹{calculateTotal()}</span>
+          )}
           {cart.length > 0 && <span className="cart-count">{cart.length}</span>}
         </div>
       )}
@@ -520,7 +678,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
           <div className="cart-content">
             {orderPlaced ? (
               <div className="order-confirmation">
-                <div className="check-icon">✓</div>
+                <div className="check-icon"><Check size={34} strokeWidth={3} /></div>
                 <h2>Order Confirmed!</h2>
                 <p>Thank you for your order. We're preparing your delicious meal!</p>
                 <div className="order-id">
@@ -533,8 +691,8 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
               <>
                 <div className="cart-header">
                   <h2>{checkoutStep === "cart" ? "Your Order" : "Checkout"}</h2>
-                  <button className="close-cart" onClick={toggleCart}>
-                    ×
+                  <button className="close-cart" onClick={toggleCart} aria-label="Close cart">
+                    <X size={20} />
                   </button>
                 </div>
 
@@ -542,7 +700,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                   <>
                     {cart.length === 0 ? (
                       <div className="empty-cart">
-
+                        <ShoppingBag size={44} strokeWidth={1.4} />
                         <p>Your cart is empty</p>
                         <p className="empty-cart-message">Add some delicious items to get started!</p>
                       </div>
@@ -560,19 +718,21 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                                   <button
                                     className="quantity-btn"
                                     onClick={() => updateQuantity(index, item.quantity - 1)}
+                                    aria-label="Decrease quantity"
                                   >
-                                    -
+                                    <Minus size={13} />
                                   </button>
                                   <span className="quantity">{item.quantity}</span>
                                   <button
                                     className="quantity-btn"
                                     onClick={() => updateQuantity(index, item.quantity + 1)}
+                                    aria-label="Increase quantity"
                                   >
-                                    +
+                                    <Plus size={13} />
                                   </button>
                                 </div>
-                                <button className="remove-item" onClick={() => removeFromCart(index)}>
-                                  Remove
+                                <button className="remove-item" onClick={() => removeFromCart(index)} aria-label="Remove item">
+                                  <Trash2 size={15} />
                                 </button>
                               </div>
                             </div>
@@ -636,7 +796,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
                               setShowLocationPicker(true);
                             }}
                           >
-                            📍 {customerInfo.coordinates ? "Change Location" : "Select Location"}
+                            <MapPin size={15} /> {customerInfo.coordinates ? "Change Location" : "Select Location"}
                           </button>
                         </div>
                         {customerInfo.coordinates && (
@@ -688,30 +848,30 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain }) => {
         <div className="footer-content">
           <div className="footer-section">
             <h3>Contact Us</h3>
-            <p>📍 {restaurant.restaurantInfo.address}</p>
-            <p>📞 {restaurant.restaurantInfo.phone}</p>
-            <p>✉️ {restaurant.restaurantInfo.email}</p>
+            <p><MapPin size={15} /> {data.restaurantInfo.address}</p>
+            <p><Phone size={15} /> {data.restaurantInfo.phone}</p>
+            <p><Mail size={15} /> {data.restaurantInfo.email}</p>
           </div>
 
           <div className="footer-section">
             <h3>Opening Hours</h3>
-            <p>Monday - Friday: 11:00 AM - 10:00 PM</p>
-            <p>Saturday - Sunday: 10:00 AM - 11:00 PM</p>
+            <p><Clock size={15} /> Monday - Friday: 11:00 AM - 10:00 PM</p>
+            <p><Clock size={15} /> Saturday - Sunday: 10:00 AM - 11:00 PM</p>
           </div>
 
           <div className="footer-section">
             <h3>Follow Us</h3>
             <div className="social-links">
-              <a href="#">Instagram</a>
-              <a href="#">Facebook</a>
-              <a href="#">Twitter</a>
+              <a href="#" aria-label="Instagram"><Instagram size={17} /></a>
+              <a href="#" aria-label="Facebook"><Facebook size={17} /></a>
+              <a href="#" aria-label="Twitter"><Twitter size={17} /></a>
             </div>
           </div>
         </div>
 
         <div className="footer-bottom">
           <p>
-            &copy; {new Date().getFullYear()} {restaurant.restaurantInfo.name}. All rights reserved.
+            &copy; {new Date().getFullYear()} {data.restaurantInfo.name}. All rights reserved.
           </p>
         </div>
       </footer>

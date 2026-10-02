@@ -1268,3 +1268,97 @@
   font-style: italic;
 }
 
+/* Keep the later desktop form rules from overriding the phone layout. */
+.onboarding-container,
+.onboarding-container * {
+  box-sizing: border-box;
+}
+
+.onboarding-content,
+.onboarding-step,
+.onboarding-container-custom,
+.restaurant-info-form,
+.form-row,
+.form-group {
+  min-width: 0;
+}
+
+.onboarding-container-custom .menu-content {
+  min-width: 0;
+}
+
+.success-popup-overlay {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.success-popup {
+  width: min(100%, 500px);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  margin: auto;
+}
+
+@media (max-width: 768px) {
+  .onboarding-container {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .onboarding-content {
+    padding: 1.25rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-buttons {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .form-buttons button {
+    width: 100%;
+  }
+
+  .summary-detail {
+    flex-direction: column;
+  }
+
+  .detail-label {
+    width: auto;
+  }
+
+  .domain-input,
+  .price-input {
+    min-width: 0;
+  }
+
+  .success-popup {
+    padding: 1.5rem 1rem;
+  }
+
+  .visit-website-btn,
+  .go-to-dashboard-btn {
+    display: block;
+    width: 100%;
+    margin: 0 0 0.75rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .onboarding-container {
+    padding: 0.5rem;
+  }
+
+  .onboarding-content {
+    padding: 1rem 0.75rem;
+  }
+
+  .progress-line {
+    margin: 0 0.25rem;
+  }
+}
+
