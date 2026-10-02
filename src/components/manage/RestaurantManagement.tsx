@@ -8,6 +8,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import EditMenuComponent from './EditMenuComponent';
 import OrderMap from './OrderMap';
+import LoadingScreen from '../LoadingScreen';
 import { Order, Restaurant, CustomerInfo, OrderItem } from '../../types/Order';
 import { getEffectiveOrderStatus } from '../../utils/orderStatus';
 import {
@@ -227,12 +228,7 @@ const RestaurantManagement = () => {
 
     // If loading, show a loading spinner
     if (loading) {
-        return (
-            <div className="restaurant-loading">
-                <div className="loading-spinner"></div>
-                <p>Hold Tight...</p>
-            </div>
-        )
+        return <LoadingScreen message="Hold tight…" />;
     }
 
     // If error, show error message

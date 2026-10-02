@@ -16,6 +16,7 @@
 
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
   padding: 1.25rem 1rem 3rem;
   background:
     radial-gradient(1100px 480px at 90% -10%, rgba(255, 122, 61, 0.08), transparent 60%),
@@ -26,6 +27,9 @@
   text-align: left;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Stop any child from widening the page on mobile (no left/right shake).
+     `clip` keeps position: sticky (dashboard header) working. */
+  overflow-x: clip;
 }
 
 .animated-bg h1,
@@ -679,6 +683,7 @@ input:checked + .toggle-slider:before {
   font-size: 0.92rem;
   color: var(--rm-brand);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .order-id:hover {

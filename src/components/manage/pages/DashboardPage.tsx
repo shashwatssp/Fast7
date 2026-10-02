@@ -5,6 +5,7 @@ import { useAuth } from '../../../auth/AuthContext';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
 import './DashboardPage.css';
+import LoadingScreen from '../../LoadingScreen';
 
 interface DashboardStats {
   todayRevenue: number;
@@ -130,12 +131,7 @@ const DashboardPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading dashboard...</p>
-      </div>
-    );
+    return <LoadingScreen message="Loading dashboard…" />;
   }
 
   return (

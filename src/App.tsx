@@ -5,6 +5,7 @@ import HomePage from './components/HomePage';
 import RestaurantPage from './components/website/RestaurantPage';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import RestaurantManagement from './components/manage/RestaurantManagement';
+import LoadingScreen from './components/LoadingScreen';
 import EditMenuComponent from './components/manage/EditMenuComponent';
 import OrderTracking from './components/customer/OrderTracking';
 import OrderTrackingDemo from './components/customer/OrderTrackingDemo';
@@ -23,14 +24,7 @@ const AppRoutes: React.FC = () => {
   const subdomain = hostname.split('.')[0]; // Extract 'foods' or the first part of the hostname
 
   if (loading) {
-    return (
-      <div>
-        <div style={{ height: '20rem' }}></div>
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
-        <div style={{ height: '200rem' }}></div>
-      </div>
-    );
+    return <LoadingScreen message="Setting things up…" />;
   }
 
   const isSubdomain = subdomain !== "fast7" && subdomain !== "www" && subdomain !== "manage"; // Avoid root domain or common subdomains

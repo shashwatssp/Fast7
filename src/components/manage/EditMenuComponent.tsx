@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useNavigate, useParams } from 'react-router-dom';
+import LoadingScreen from '../LoadingScreen';
 
 const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) => {
     const navigate = useNavigate();
@@ -375,14 +376,7 @@ const EditMenuComponent = ({ restaurantId, existingMenuSelections, onClose }) =>
     };
 
     if (loading) {
-        return (
-            <div>
-            <div style={{ height: '20rem' }}></div>
-                <div className="loading-spinner"></div>
-                <p>Loading...</p>
-                <div style={{ height: '200rem' }}></div>
-            </div>
-        );
+        return <LoadingScreen message="Preparing the menu editor…" />;
     }
 
     return (

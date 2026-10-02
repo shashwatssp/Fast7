@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import './HomePage.css';
+import LoadingScreen from './LoadingScreen';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useAuth } from '../auth/AuthContext';
 import {
@@ -69,12 +70,7 @@ const HomePage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="home-loading">
-        <div className="loading-spinner" />
-        <p>Warming things up...</p>
-      </div>
-    );
+    return <LoadingScreen message="Warming things up…" />;
   }
 
   return (

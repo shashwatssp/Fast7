@@ -9,6 +9,7 @@ import { notificationService } from '../../utils/notificationService';
 import { collection, query, where, onSnapshot, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './OrderTracking.css';
+import LoadingScreen from '../LoadingScreen';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -481,14 +482,7 @@ useEffect(() => {
   };
 
   if (loading) {
-    return (
-      <div className="order-tracking-container">
-        <div className="tracking-loading">
-          <div className="loading-spinner-large"></div>
-          <p>Loading your order tracking...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading your order tracking…" />;
   }
 
   if (error || !order) {

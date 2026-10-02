@@ -6,6 +6,7 @@ import { useAuth } from '../../../auth/AuthContext';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
 import './SettingsPage.css';
+import LoadingScreen from '../../LoadingScreen';
 
 interface RestaurantSettings {
   restaurantName: string;
@@ -178,14 +179,7 @@ const SettingsPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="settings-page">
-        <div className="settings-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading settings...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading settings…" />;
   }
 
   return (

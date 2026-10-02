@@ -6,6 +6,7 @@ import { useAuth } from '../../../auth/AuthContext';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
 import './MenuPage.css';
+import LoadingScreen from '../../LoadingScreen';
 
 interface MenuItem {
   id: string;
@@ -243,14 +244,7 @@ const MenuPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="menu-page">
-        <div className="menu-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading menu...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading menu…" />;
   }
 
   return (
