@@ -3,9 +3,13 @@
    Warm brand palette, matches landing page / dashboard systems.
    ============================================================ */
 
+/* Fixed overlay pinned to the viewport: centering can never be disturbed by
+   ancestor widths, padding, or body layout — the mark, progress bar and
+   message are always dead-center on laptops and phones alike. */
 .fast7-loading {
-  /* 100dvh follows the mobile browser's dynamic viewport (URL bar), so the
-     logo + bar stay exactly centered on phones as well as laptops. */
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
