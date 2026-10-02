@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase';
 import { useAuth } from '../../../auth/AuthContext';
+import { getEffectiveOrderStatus } from '../../../utils/orderStatus';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
 import './DashboardPage.css';
@@ -45,7 +46,12 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       const ordersRef = collection(db, 'orders');
-      const q = query(ordersRef, where("restaurantId", "==", authRestaurantData.id));
+      // Match both the doc id and the legacy full-domain value (orders placed
+      // before the restaurantId fix carry domainName instead of the doc id).
+      const q = query(
+        ordersRef,
+        where("restaurantId", "in", [authRestaurantData.id, authRestaurantData.domainName].filter(Boolean))
+      );
       const querySnapshot = await getDocs(q);
 
       const now = new Date();
@@ -53,43 +59,66 @@ const DashboardPage: React.FC = () => {
       const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
+      // An order's date: prefer the checkout ISO string (orderTime), fall back
+      // to the Firestore createdAt timestamp. Older orders carry ONLY
+      // createdAt, so reading orderTime alone zeroed every time-based stat.
+      const resolveOrderDate = (order: any): Date | null => {
+        const t = order.orderTime;
+        if (t) {
+          if (typeof t.toMillis === 'function') return new Date(t.toMillis());
+          const parsed = new Date(t);
+          if (!isNaN(parsed.getTime())) return parsed;
+        }
+        if (order.createdAt?.toDate) return order.createdAt.toDate();
+        return null;
+      };
+
       let todayRevenue = 0;
       let todayOrders = 0;
       let weekRevenue = 0;
       let weekOrders = 0;
       let monthRevenue = 0;
       let monthOrders = 0;
-      const customers = new Set();
+      const customers = new Set<string>();
       const itemStats: { [key: string]: { count: number; revenue: number } } = {};
 
       querySnapshot.forEach((doc) => {
         const orderData = doc.data();
-        const orderTime = orderData.orderTime ? new Date(orderData.orderTime) : null;
+        // Cancelled orders are not sales — exclude them from every metric
+        if (getEffectiveOrderStatus(orderData) === 'cancelled') return;
+
+        const orderDate = resolveOrderDate(orderData);
         const total = isNaN(orderData.total) ? 0 : Number(orderData.total);
 
-        if (orderTime) {
+        if (orderDate) {
           // Today's stats
-          if (orderTime >= todayStart) {
+          if (orderDate >= todayStart) {
             todayRevenue += total;
             todayOrders++;
           }
 
           // Week's stats
-          if (orderTime >= weekStart) {
+          if (orderDate >= weekStart) {
             weekRevenue += total;
             weekOrders++;
           }
 
           // Month's stats
-          if (orderTime >= monthStart) {
+          if (orderDate >= monthStart) {
             monthRevenue += total;
             monthOrders++;
           }
         }
 
-        // Track customers
-        if (orderData.customer?.email) {
-          customers.add(orderData.customer.email);
+        // Track customers. The checkout form collects a phone number
+        // (customer.contact) — it has no email field, so keying on
+        // email alone always reported 0 unique customers.
+        const identity = orderData.customer?.email
+          || orderData.customer?.phone
+          || (orderData.customer as any)?.contact
+          || orderData.customer?.name;
+        if (identity) {
+          customers.add(identity);
         }
 
         // Track popular items
@@ -212,7 +241,7 @@ const DashboardPage: React.FC = () => {
                       <span className="item-rank">#{index + 1}</span>
                       <div className="item-details">
                         <h4 className="item-name">{item.name}</h4>
-                        <p className="item-stats">{item.count} orders • ₹{item.revenue.toLocaleString()}</p>
+                        <p className="item-stats">{item.count} sold • ₹{item.revenue.toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="item-revenue">

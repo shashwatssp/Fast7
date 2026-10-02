@@ -424,11 +424,18 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain, templateOver
       
       // Calculate order total
       const orderTotal = calculateTotal()
+
+      // The restaurant's Firestore doc id is the first label of its domain
+      // (onboarding creates the doc as setDoc(doc(db, 'restaurants', domainName.split('.')[0]))).
+      // The manage dashboard queries orders by that doc id, so the order must
+      // store it — writing the full domainName here made every new order
+      // invisible to the dashboard (including the Pending Orders section).
+      const restaurantDocId = restaurant?.domainName?.split('.')[0]
       
       // Create order object with coordinates
       const orderData = {
         id: newOrderId,
-        restaurantId: restaurant?.domainName,
+        restaurantId: restaurantDocId,
         customer: {
           ...customerInfo,
           coordinates: {
@@ -453,9 +460,8 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain, templateOver
       console.log("Order added with ID: ", docRef.id)
       
       // Update restaurant's totalSalesDone
-      if (restaurant?.domainName) {
-        const domainPrefix = restaurant.domainName.split('.')[0]
-        const restaurantRef = doc(db, 'restaurants', domainPrefix)
+      if (restaurantDocId) {
+        const restaurantRef = doc(db, 'restaurants', restaurantDocId)
         
         // Use a transaction to safely update the total sales
         await runTransaction(db, async (transaction) => {

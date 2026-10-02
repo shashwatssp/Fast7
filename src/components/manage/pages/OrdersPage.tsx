@@ -46,9 +46,11 @@ const OrdersPage: React.FC = () => {
       return;
     }
     const ordersRef = collection(db, 'orders');
+    // Match both the doc id and the legacy full-domain value (orders placed
+    // before the restaurantId fix carry domainName instead of the doc id).
     const q = query(
       ordersRef,
-      where("restaurantId", "==", restaurantData.id)
+      where("restaurantId", "in", [restaurantData.id, restaurantData.domainName].filter(Boolean))
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -80,10 +82,6 @@ const OrdersPage: React.FC = () => {
       unsubscribe();
     };
   }, [restaurantData, navigate]);
-
-  useEffect(() => {
-    filterOrders();
-  }, [orders, statusFilter, searchTerm, dateFilter, filterOrders]);
 
   const calculateStats = (ordersData: Order[]) => {
     const newStats: OrderStats = {
@@ -166,6 +164,14 @@ const OrdersPage: React.FC = () => {
 
     setFilteredOrders(filtered);
   }, [orders, statusFilter, searchTerm, dateFilter]);
+
+  // Declared AFTER filterOrders on purpose: this effect's dependency array is
+  // evaluated during render, so a reference above the const's initialization
+  // throws "Cannot access 'filterOrders' before initialization" and crashes
+  // the whole page (the View All Orders white screen).
+  useEffect(() => {
+    filterOrders();
+  }, [orders, statusFilter, searchTerm, dateFilter, filterOrders]);
 
   const updateOrderStatus = async (docId: string, newStatus: string) => {
     try {

@@ -129,19 +129,23 @@ const RestaurantOnboarding = () => {
         }
     };
 
+    const totalMenuItems =
+        Object.values(menuSelections.standardItems).reduce((count, items) => count + items.length, 0) +
+        Object.values(menuSelections.customItems).reduce((count, items) => count + items.length, 0);
+
     return (
         <div className="onboarding-container">
             {showSuccessPopup && (
                 <div className="success-popup-overlay">
-                    <div className="success-popup">
-                        <div className="success-icon">
-                            <div className="check-icon">✓</div>
-                            <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                            <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-
+                    <div className="success-popup" role="dialog" aria-modal="true" aria-labelledby="success-popup-title">
+                        <div className="success-icon" aria-hidden="true">
+                            <svg className="success-checkmark" viewBox="0 0 52 52">
+                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                            </svg>
                         </div>
-                        <h2>Congratulations!</h2>
-                        <p>Your website is now live at:</p>
+                        <h2 id="success-popup-title">Congratulations!</h2>
+                        <p>Your restaurant website is live and ready to take orders at:</p>
                         <a href={newWebsiteUrl} target="_blank" rel="noopener noreferrer" className="website-url">
                             {newWebsiteUrl}
                         </a>
@@ -159,18 +163,20 @@ const RestaurantOnboarding = () => {
                                 <p>Restaurant dashboard ready</p>
                             </div>
                         </div>
-                        <button
-                            className="visit-website-btn"
-                            onClick={() => window.open(newWebsiteUrl, '_blank', 'noopener')}
-                        >
-                            Visit Your Website
-                        </button>
-                        <button
-                            className="go-to-dashboard-btn"
-                            onClick={() => navigate('/manage')}
-                        >
-                            Go to Dashboard
-                        </button>
+                        <div className="success-actions">
+                            <button
+                                className="visit-website-btn"
+                                onClick={() => window.open(newWebsiteUrl, '_blank', 'noopener')}
+                            >
+                                Visit Your Website
+                            </button>
+                            <button
+                                className="go-to-dashboard-btn"
+                                onClick={() => navigate('/manage')}
+                            >
+                                Go to Dashboard
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -351,63 +357,69 @@ const RestaurantOnboarding = () => {
 
                         <div className="summary-card">
                             <div className="summary-section">
-                                <h3>Website Domain</h3>
+                                <h3><span className="section-icon" aria-hidden="true">🌐</span>Website Domain</h3>
                                 <p className="domain-preview">fast7.netlify.app/{domainName}</p>
                             </div>
 
                             <div className="summary-section">
-                                <h3>Restaurant Details</h3>
+                                <h3><span className="section-icon" aria-hidden="true">🍽️</span>Restaurant Details</h3>
                                 <div className="summary-detail">
-                                    <span className="detail-label">Name:</span>
+                                    <span className="detail-label">Name</span>
                                     <span className="detail-value">{restaurantInfo.name}</span>
                                 </div>
                                 <div className="summary-detail">
-                                    <span className="detail-label">Bio:</span>
+                                    <span className="detail-label">Bio</span>
                                     <span className="detail-value bio-preview">{restaurantInfo.bio}</span>
                                 </div>
                                 <div className="summary-detail">
-                                    <span className="detail-label">Contact:</span>
-                                    <span className="detail-value">{restaurantInfo.phone} | {restaurantInfo.email}</span>
+                                    <span className="detail-label">Phone</span>
+                                    <span className="detail-value">{restaurantInfo.phone}</span>
                                 </div>
                                 <div className="summary-detail">
-                                    <span className="detail-label">Address:</span>
+                                    <span className="detail-label">Email</span>
+                                    <span className="detail-value">{restaurantInfo.email}</span>
+                                </div>
+                                <div className="summary-detail">
+                                    <span className="detail-label">Address</span>
                                     <span className="detail-value">{restaurantInfo.address}</span>
                                 </div>
                             </div>
 
                             <div className="summary-section">
-                                <h3>Menu Selection</h3>
-                                <div className="summary-detail">
-                                    <span className="detail-label">Standard Categories:</span>
-                                    <span className="detail-value">{menuSelections.standardCategories.length}</span>
-                                </div>
-                                <div className="summary-detail">
-                                    <span className="detail-label">Custom Categories:</span>
-                                    <span className="detail-value">{menuSelections.customCategories.length}</span>
-                                </div>
-                                <div className="summary-detail">
-                                    <span className="detail-label">Total Menu Items:</span>
-                                    <span className="detail-value">
-                                        {Object.values(menuSelections.standardItems).reduce((count, items) => count + items.length, 0) +
-                                            Object.values(menuSelections.customItems).reduce((count, items) => count + items.length, 0)}
-                                    </span>
+                                <h3><span className="section-icon" aria-hidden="true">📋</span>Menu Selection</h3>
+                                <div className="summary-stats">
+                                    <div className="stat-tile">
+                                        <span className="stat-value">{menuSelections.standardCategories.length}</span>
+                                        <span className="stat-label">Standard Categories</span>
+                                    </div>
+                                    <div className="stat-tile">
+                                        <span className="stat-value">{menuSelections.customCategories.length}</span>
+                                        <span className="stat-label">Custom Categories</span>
+                                    </div>
+                                    <div className="stat-tile">
+                                        <span className="stat-value">{totalMenuItems}</span>
+                                        <span className="stat-label">Total Menu Items</span>
+                                    </div>
                                 </div>
                             </div>
+
                             <div className="summary-section">
-                                <h3>Enable Ordering</h3>
+                                <h3><span className="section-icon" aria-hidden="true">⚡</span>Enable Ordering</h3>
                                 <label className="toggle-label">
-                                    <span>Enable Ordering</span>
+                                    <span className="toggle-text">
+                                        <span className="toggle-title">Accept online orders</span>
+                                        <span className="toggle-description">Don't worry, you can change it anytime.</span>
+                                    </span>
                                     <input
                                         type="checkbox"
                                         checked={orderingEnabled}
                                         onChange={(e) => setOrderingEnabled(e.target.checked)}
                                     />
                                 </label>
-                                <p className="toggle-description">Don't worry, you can change it anytime.</p>
                             </div>
 
                             <div className="next-steps-info">
-                                <h3>Next Steps</h3>
+                                <h3><span className="section-icon" aria-hidden="true">🚀</span>Next Steps</h3>
                                 <p>After creating your website, you'll be able to:</p>
                                 <ul>
                                     <li>Customize your website appearance</li>
