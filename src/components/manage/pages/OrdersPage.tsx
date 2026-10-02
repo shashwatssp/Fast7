@@ -8,6 +8,7 @@ import { useAuth } from '../../../auth/AuthContext';
 import PageHeader from '../shared/PageHeader';
 import StatsCard from '../shared/StatsCard';
 import './OrdersPage.css';
+import LoadingScreen from '../../LoadingScreen';
 
 interface OrderStats {
   total: number;
@@ -215,14 +216,7 @@ const OrdersPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="orders-page">
-        <div className="orders-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading orders...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading orders…" />;
   }
 
   return (

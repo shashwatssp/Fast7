@@ -8,6 +8,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import EditMenuComponent from './EditMenuComponent';
 import OrderMap from './OrderMap';
+import LoadingScreen from '../LoadingScreen';
 import { Order, Restaurant, CustomerInfo, OrderItem } from '../../types/Order';
 import { getEffectiveOrderStatus } from '../../utils/orderStatus';
 import {
@@ -227,12 +228,7 @@ const RestaurantManagement = () => {
 
     // If loading, show a loading spinner
     if (loading) {
-        return (
-            <div className="restaurant-loading">
-                <div className="loading-spinner"></div>
-                <p>Hold Tight...</p>
-            </div>
-        )
+        return <LoadingScreen message="Hold tight…" />;
     }
 
     // If error, show error message
@@ -283,6 +279,9 @@ const RestaurantManagement = () => {
                             <Bell size={24} />
                             <span className="notification-badge">0</span>
                         </div>
+                        <button className="settings-btn" onClick={() => navigate('/manage/settings')} title="Settings" aria-label="Settings">
+                            <Settings size={20} />
+                        </button>
                         <button className="logout-btn" onClick={handleLogout} title="Logout" aria-label="Logout">
                             <LogOut size={20} />
                         </button>

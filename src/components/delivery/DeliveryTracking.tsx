@@ -6,6 +6,7 @@ import { olaMapsService, RoutePoint } from '../../utils/olaMapsService';
 import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import './DeliveryTracking.css';
+import LoadingScreen from '../LoadingScreen';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -247,14 +248,7 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({ orderId, restaurant
   };
 
   if (loading) {
-    return (
-      <div className="delivery-tracking-container">
-        <div className="delivery-loading">
-          <div className="loading-spinner-large"></div>
-          <p>Loading delivery tracking...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Loading delivery tracking…" />;
   }
 
   if (error || !order) {

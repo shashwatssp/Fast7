@@ -25,12 +25,33 @@ a:hover {
   color: #535bf2;
 }
 
+/* Layout hygiene (equivalent to Tailwind Preflight, which is NOT active in
+   this build — the @tailwind directives are never processed because there is
+   no postcss config). Without it, width:100% + padding elements (page shells,
+   modals, the loading screen) render in content-box and end up WIDER than the
+   viewport — the right edge lands off-screen and centered content shifts. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Normal block flow. The old Vite boilerplate `display: flex; place-items: center`
+   made #root a flex item whose min-content floor let unbreakable/nowrap text widen
+   the page past the viewport on mobile, and shifted centered content off-center.
+   Every page centers itself; the body must not interfere. */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
   min-width: 0;
   min-height: 100vh;
+}
+
+/* Prevent horizontal panning ("page shake") on mobile. `clip` does NOT
+   create a scroll container, so position: sticky keeps working. */
+html,
+body {
+  overflow-x: clip;
 }
 
 h1 {

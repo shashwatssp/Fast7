@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { addDoc, collection, doc, getDoc, runTransaction, serverTimestamp } from "firebase/firestore"
 import "./RestaurantPage.css"
+import LoadingScreen from "../LoadingScreen"
 import { db } from "../../firebase"
 import LocationPicker from "./LocationPicker"
 import { RoutePoint } from "../../utils/olaMapsService"
@@ -497,13 +498,7 @@ const RestaurantPage: React.FC<RestaurantPageProps> = ({ subdomain, templateOver
 
 
   if (!previewData && loading) {
-
-    return (
-      <div className="restaurant-loading">
-        <div className="loading-spinner"></div>
-        <p>Setting the table for you...</p>
-      </div>
-    )
+    return <LoadingScreen message="Setting the table for you…" />;
   }
 
   if (!previewData && error) {

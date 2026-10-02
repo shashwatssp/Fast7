@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import LoadingScreen from './LoadingScreen';
 import './MenuSelectionStep.css';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
@@ -404,14 +405,7 @@ const MenuSelectionStep: React.FC<MenuSelectionStepProps> = ({ onNext, onBack })
     };
 
     if (loading) {
-        return (
-            <div>
-            <div style={{ height: '20rem' }}></div>
-                <div className="loading-spinner"></div>
-                <p>Loading...</p>
-                <div style={{ height: '200rem' }}></div>
-            </div>
-        );
+        return <LoadingScreen message="Preparing the menu…" />;
     }
 
     return (
