@@ -133,15 +133,15 @@ const RestaurantOnboarding = () => {
         <div className="onboarding-container">
             {showSuccessPopup && (
                 <div className="success-popup-overlay">
-                    <div className="success-popup">
-                        <div className="success-icon">
-                            <div className="check-icon">✓</div>
-                            <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-                            <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-
+                    <div className="success-popup" role="dialog" aria-modal="true" aria-labelledby="success-popup-title">
+                        <div className="success-icon" aria-hidden="true">
+                            <svg className="success-checkmark" viewBox="0 0 52 52">
+                                <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                                <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                            </svg>
                         </div>
-                        <h2>Congratulations!</h2>
-                        <p>Your website is now live at:</p>
+                        <h2 id="success-popup-title">Congratulations!</h2>
+                        <p>Your restaurant website is live and ready to take orders at:</p>
                         <a href={newWebsiteUrl} target="_blank" rel="noopener noreferrer" className="website-url">
                             {newWebsiteUrl}
                         </a>
@@ -159,18 +159,20 @@ const RestaurantOnboarding = () => {
                                 <p>Restaurant dashboard ready</p>
                             </div>
                         </div>
-                        <button
-                            className="visit-website-btn"
-                            onClick={() => window.open(newWebsiteUrl, '_blank', 'noopener')}
-                        >
-                            Visit Your Website
-                        </button>
-                        <button
-                            className="go-to-dashboard-btn"
-                            onClick={() => navigate('/manage')}
-                        >
-                            Go to Dashboard
-                        </button>
+                        <div className="success-actions">
+                            <button
+                                className="visit-website-btn"
+                                onClick={() => window.open(newWebsiteUrl, '_blank', 'noopener')}
+                            >
+                                Visit Your Website
+                            </button>
+                            <button
+                                className="go-to-dashboard-btn"
+                                onClick={() => navigate('/manage')}
+                            >
+                                Go to Dashboard
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
