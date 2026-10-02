@@ -75,7 +75,12 @@ const RestaurantManagement = () => {
         }
         setIsOrderingEnabled((restaurantData as Restaurant).orderingEnabled || false);
         const ordersRef = collection(db, 'orders');
-        const q = query(ordersRef, where("restaurantId", "==", restaurantData.id));
+        // Match both the doc id and the legacy full-domain value (orders placed
+        // before the restaurantId fix carry domainName instead of the doc id).
+        const q = query(
+          ordersRef,
+          where("restaurantId", "in", [restaurantData.id, restaurantData.domainName].filter(Boolean))
+        );
         return onSnapshot(q, (snapshot) => {
             const pending: Order[] = [];
             const delivering: Order[] = [];

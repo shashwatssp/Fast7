@@ -158,7 +158,9 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ customerPhone }) => {
       if (!order?.restaurantId) return;
       
       try {
-        const restaurantRef = doc(db, 'restaurants', order.restaurantId);
+        // Legacy orders may carry the full domain ("shop.fast7.app") instead
+        // of the doc id ("shop") — the doc id is always the first label.
+        const restaurantRef = doc(db, 'restaurants', order.restaurantId.split('.')[0]);
         const restaurantDoc = await getDoc(restaurantRef);
         
         if (restaurantDoc.exists()) {

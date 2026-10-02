@@ -45,7 +45,12 @@ const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       const ordersRef = collection(db, 'orders');
-      const q = query(ordersRef, where("restaurantId", "==", authRestaurantData.id));
+      // Match both the doc id and the legacy full-domain value (orders placed
+      // before the restaurantId fix carry domainName instead of the doc id).
+      const q = query(
+        ordersRef,
+        where("restaurantId", "in", [authRestaurantData.id, authRestaurantData.domainName].filter(Boolean))
+      );
       const querySnapshot = await getDocs(q);
 
       const now = new Date();
