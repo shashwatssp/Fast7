@@ -25,10 +25,13 @@ a:hover {
   color: #535bf2;
 }
 
+/* Normal block flow. The old Vite boilerplate `display: flex; place-items: center`
+   made #root a flex item whose min-content floor let unbreakable/nowrap text widen
+   the page past the viewport on mobile, and shifted centered content off-center.
+   Every page centers itself; the body must not interfere. */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
   min-width: 0;
   min-height: 100vh;
 }

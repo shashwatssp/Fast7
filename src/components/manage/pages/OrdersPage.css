@@ -17,6 +17,7 @@
   max-width: 100%;
   padding: 1rem;
   overflow-x: clip;
+  overflow-wrap: break-word;
 }
 
 @keyframes gradient {

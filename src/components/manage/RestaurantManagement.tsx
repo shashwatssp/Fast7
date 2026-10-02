@@ -279,6 +279,9 @@ const RestaurantManagement = () => {
                             <Bell size={24} />
                             <span className="notification-badge">0</span>
                         </div>
+                        <button className="settings-btn" onClick={() => navigate('/manage/settings')} title="Settings" aria-label="Settings">
+                            <Settings size={20} />
+                        </button>
                         <button className="logout-btn" onClick={handleLogout} title="Logout" aria-label="Logout">
                             <LogOut size={20} />
                         </button>

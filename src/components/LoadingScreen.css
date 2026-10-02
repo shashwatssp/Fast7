@@ -4,7 +4,10 @@
    ============================================================ */
 
 .fast7-loading {
+  /* 100dvh follows the mobile browser's dynamic viewport (URL bar), so the
+     logo + bar stay exactly centered on phones as well as laptops. */
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   max-width: 100%;
   display: flex;

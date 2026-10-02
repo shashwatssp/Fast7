@@ -25,6 +25,8 @@
   color: var(--rm-ink);
   line-height: 1.6;
   text-align: left;
+  /* Long words (names, ids, emails) wrap instead of crossing the screen edge. */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* Stop any child from widening the page on mobile (no left/right shake).
@@ -164,6 +166,7 @@
   justify-content: center;
 }
 
+.settings-btn,
 .logout-btn {
   display: flex;
   align-items: center;
@@ -177,6 +180,7 @@
   transition: all 0.2s var(--rm-ease);
 }
 
+.settings-btn:hover,
 .logout-btn:hover {
   border-color: rgba(232, 64, 46, 0.5);
   color: var(--rm-brand);
