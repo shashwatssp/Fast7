@@ -126,6 +126,17 @@ const RestaurantManagement = () => {
         }, err => console.error("Error fetching orders:", err));
     }, [restaurantData]);
 
+    // Today's revenue across all live orders (cancelled orders are bucketed
+    // separately and never count toward sales).
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayRevenue = [...pendingOrders, ...deliveringOrders, ...pastOrders].reduce((sum, order) => {
+        const t = order.orderTime
+            ? new Date(order.orderTime)
+            : (order.createdAt?.toDate ? order.createdAt.toDate() : null);
+        return t && t >= todayStart && !isNaN(order.total) ? sum + order.total : sum;
+    }, 0);
+
     const handleEditMenuClose = (updatedMenu?: any) => {
         // Simply set showMenuSelection to false to hide the EditMenuComponent
         setShowMenuSelection(false);
@@ -662,7 +673,7 @@ const RestaurantManagement = () => {
                             <div className="card-content">
                                 <div className="stat-container">
                                     <span className="stat-label">Today's Revenue</span>
-                                    <span className="stat-badge">₹0</span>
+                                    <span className="stat-badge">₹{todayRevenue.toLocaleString('en-IN')}</span>
                                 </div>
                             </div>
                             <div className="card-footer">
