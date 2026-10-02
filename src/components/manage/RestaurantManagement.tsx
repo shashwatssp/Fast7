@@ -484,7 +484,7 @@ const RestaurantManagement = () => {
                                             className="complete-delivery-btn"
                                             onClick={() => updateOrderStatus(order, 'completed')}
                                         >
-                                            <Check size={15} /> Delivered
+                                            <Check size={15} /> Mark as Delivered
                                         </button>
                                     </div>
                                 </div>
